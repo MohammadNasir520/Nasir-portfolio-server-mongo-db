@@ -42,5 +42,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.8.9",
     "zod": "^3.23.8"
+  },
+  "engines": {
+    "node": "26.x"
   }
 }
