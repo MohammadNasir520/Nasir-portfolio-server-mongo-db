@@ -40,4 +40,12 @@ export default {
       max: parseNumber(process.env.AUTH_RATE_LIMIT_MAX, 20, 1),
     },
   },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    // Signs upload requests; never sent to the browser.
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+    // Every upload is scoped under this, so a client cannot write elsewhere.
+    baseFolder: process.env.CLOUDINARY_UPLOAD_FOLDER || "portfolio",
+  },
 };

@@ -32,7 +32,26 @@ const updateByIdFromDB = async (
   return User.findById(user.userId).select(userPublicFields);
 };
 
+const changePassword = async (
+  user: JwtPayload,
+  payload: { oldPassword: string; newPassword: string }
+): Promise<void> => {
+  const profile = await User.findById(user.userId).select("+password");
+  if (!profile) {
+    throw new ApiError(httpStatus.NOT_FOUND, "your profile does not exist");
+  }
+
+  if (!(await profile.isPasswordMatched(payload.oldPassword))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "current password is incorrect");
+  }
+
+  // Assign and save so the model's pre-save hook re-hashes it.
+  profile.password = payload.newPassword;
+  await profile.save();
+};
+
 export const ProfileService = {
   getByIdFromDB,
   updateByIdFromDB,
+  changePassword,
 };

@@ -3,61 +3,61 @@ import httpStatus from "http-status";
 import catchAsync from "../../../shared/catchAsync";
 import pick from "../../../shared/pick";
 import sendResponse from "../../../shared/sendResponse";
-import { bannerFilterableFields } from "./banner.constants";
-import { BannerService } from "./banner.service";
+import { experienceFilterableFields } from "./experience.constants";
+import { ExperienceService } from "./experience.service";
 
 const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await BannerService.insertIntoDB(req.body);
+  const result = await ExperienceService.insertIntoDB(req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Banner created successfully",
+    message: "Experience created successfully",
     data: result,
   });
 });
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, bannerFilterableFields);
-  const result = await BannerService.getAllFromDB(filters);
+  const filters = pick(req.query, experienceFilterableFields);
+  const result = await ExperienceService.getAllFromDB(filters);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Banner fetched successfully",
+    message: "Experience fetched successfully",
     data: result,
   });
 });
 
 const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await BannerService.getByIdFromDB(req.params.id);
+  const result = await ExperienceService.getByIdFromDB(req.params.id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Banner fetched successfully",
+    message: "Experience fetched successfully",
     data: result,
   });
 });
 
 const updateIntoDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await BannerService.updateIntoDB(req.params.id, req.body);
+  const result = await ExperienceService.updateIntoDB(req.params.id, req.body);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Banner updated successfully",
+    message: "Experience updated successfully",
     data: result,
   });
 });
 
 const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await BannerService.deleteFromDB(req.params.id);
+  const result = await ExperienceService.deleteFromDB(req.params.id);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Banner deleted successfully",
+    message: "Experience deleted successfully",
     data: result,
   });
 });
 
-export const BannerController = {
+export const ExperienceController = {
   insertIntoDB,
   getAllFromDB,
   getByIdFromDB,

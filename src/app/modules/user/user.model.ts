@@ -4,16 +4,22 @@ import config from "../../../config";
 import { ENUM_USER_ROLE, USER_ROLES } from "../../../enums/user";
 import { IUser, IUserMethods, UserModel } from "./user.interface";
 
+/**
+ * A login account, and nothing more. The owner's public identity - phone,
+ * portraits, social links - lives in the `siteProfile` singleton; `email` here
+ * is the credential used to sign in, which is allowed to differ from the
+ * contact address the site publishes.
+ */
 const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     // Never returned by default; read it explicitly with .select("+password").
     password: { type: String, required: true, select: false },
-    role: { type: String, enum: USER_ROLES, default: ENUM_USER_ROLE.ADMIN },
-    contactNo: { type: String, required: true },
-    image1: { type: String, default: "" },
-    image2: { type: String, default: "" },
+    // Defaults to the powerless role: any creation path that forgets to set
+    // one yields an account that cannot reach the dashboard. `admin.service`
+    // force-sets ADMIN for accounts created through /admins.
+    role: { type: String, enum: USER_ROLES, default: ENUM_USER_ROLE.USER },
   },
   {
     timestamps: true,

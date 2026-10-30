@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import { Secret, SignOptions } from "jsonwebtoken";
 import config from "../../../config";
+import { ENUM_USER_ROLE } from "../../../enums/user";
 import ApiError from "../../../errors/ApiError";
 import { jwtHelpers } from "../../helpers/jwtHelpers";
 import { IUser } from "../user/user.interface";
@@ -16,8 +17,16 @@ const insertIntoDB = async (data: IUser): Promise<Partial<IUser>> => {
     );
   }
 
-  // Hashed by the pre-save hook on the model.
-  const result = await User.create(data);
+  // Self-registration can only ever produce a powerless account. Privileged
+  // accounts are created by a super_admin through POST /admins. Forced here as
+  // well as omitted from the zod schema - two independent locks on the same
+  // door, because this route is public.
+  const result = await User.create({
+    name: data.name,
+    email: data.email,
+    password: data.password,
+    role: ENUM_USER_ROLE.USER,
+  });
   return result.toJSON();
 };
 

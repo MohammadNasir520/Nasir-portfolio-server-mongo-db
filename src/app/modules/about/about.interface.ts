@@ -4,7 +4,6 @@ export type IAbout = {
   _id?: Types.ObjectId;
   title: string;
   description: string;
-  youtube?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

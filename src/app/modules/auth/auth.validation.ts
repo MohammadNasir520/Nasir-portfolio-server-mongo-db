@@ -1,17 +1,23 @@
 import { z } from "zod";
 
+/**
+ * `role` is deliberately absent, and the body is strict.
+ *
+ * This route is public. Accepting a `role` here - while User.role defaulted to
+ * "admin" - let anyone self-register as an administrator. The role is now
+ * forced server-side in auth.service, the schema refuses to even read one, and
+ * `.strict()` makes an attempt to send one a 400 rather than a silent no-op.
+ */
 const signUpZodSchema = z.object({
-  body: z.object({
-    name: z.string({ required_error: "name is required" }),
-    email: z.string({ required_error: "email is required" }).email(),
-    password: z
-      .string({ required_error: "password is required" })
-      .min(6, "password must be at least 6 characters"),
-    contactNo: z.string({ required_error: "contactNo is required" }),
-    role: z.enum(["admin", "super_admin", "user"]).optional(),
-    image1: z.string().optional(),
-    image2: z.string().optional(),
-  }),
+  body: z
+    .object({
+      name: z.string({ required_error: "name is required" }),
+      email: z.string({ required_error: "email is required" }).email(),
+      password: z
+        .string({ required_error: "password is required" })
+        .min(8, "password must be at least 8 characters"),
+    })
+    .strict(),
 });
 
 const signInZodSchema = z.object({

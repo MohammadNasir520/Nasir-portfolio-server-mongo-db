@@ -33,9 +33,10 @@ router.patch(
   AdminController.updateIntoDB
 );
 
+// Narrowed to super_admin: this used to let any admin delete a super_admin.
 router.delete(
   "/:id",
-  auth(ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.SUPER_ADMIN),
+  auth(ENUM_USER_ROLE.SUPER_ADMIN),
   AdminController.deleteFromDB
 );
 

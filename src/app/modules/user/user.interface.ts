@@ -4,12 +4,10 @@ import { ENUM_USER_ROLE } from "../../../enums/user";
 export type IUser = {
   _id?: Types.ObjectId;
   name: string;
+  /** The sign-in credential. The published contact address is siteProfile.email. */
   email: string;
   password: string;
   role: ENUM_USER_ROLE | string;
-  contactNo: string;
-  image1?: string;
-  image2?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };

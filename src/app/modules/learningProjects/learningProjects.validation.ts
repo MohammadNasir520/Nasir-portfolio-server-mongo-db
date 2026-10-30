@@ -1,7 +1,19 @@
 import { z } from "zod";
 
+/**
+ * `url` accepts an absolute URL or a site-root path, matching the travel
+ * module. It used to demand a full URL, but the seed inserted
+ * `/images/...` paths through the model (bypassing zod) - so loading a seeded
+ * project into an edit form and saving it back failed validation on its own
+ * unmodified data.
+ */
 const imageSchema = z.object({
-  url: z.string().url(),
+  url: z
+    .string()
+    .min(1)
+    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), {
+      message: "image url must be an absolute URL or a site-root path",
+    }),
 });
 
 const CreateZodSchema = z.object({

@@ -27,7 +27,18 @@ const updateByIdFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const changePassword = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as JwtPayload;
+  await ProfileService.changePassword(user, req.body);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "password changed successfully",
+  });
+});
+
 export const ProfileController = {
   getAllFromDB,
   updateByIdFromDB,
+  changePassword,
 };
