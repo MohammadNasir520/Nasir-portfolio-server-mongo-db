@@ -6,6 +6,7 @@ import sendResponse from "../../../shared/sendResponse";
 import { paginationFields } from "../../constants/pagination";
 import { travelPlaceFilterableFields } from "./travel.constants";
 import { TravelService } from "./travel.service";
+import { parseLang } from "../../../shared/localize";
 
 const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
   const result = await TravelService.insertIntoDB(req.body);
@@ -20,7 +21,7 @@ const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, travelPlaceFilterableFields);
   const paginationOptions = pick(req.query, paginationFields);
-  const result = await TravelService.getAllFromDB(filters, paginationOptions);
+  const result = await TravelService.getAllFromDB(filters, paginationOptions, parseLang(req.query.lang));
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -30,7 +31,7 @@ const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await TravelService.getByIdFromDB(req.params.id);
+  const result = await TravelService.getByIdFromDB(req.params.id, parseLang(req.query.lang));
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -79,8 +80,8 @@ const getStats = catchAsync(async (_req: Request, res: Response) => {
   });
 });
 
-const getOverview = catchAsync(async (_req: Request, res: Response) => {
-  const result = await TravelService.getOverview();
+const getOverview = catchAsync(async (req: Request, res: Response) => {
+  const result = await TravelService.getOverview(parseLang(req.query.lang));
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

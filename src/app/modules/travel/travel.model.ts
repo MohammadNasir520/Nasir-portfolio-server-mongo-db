@@ -37,12 +37,16 @@ const travelPlaceSchema = new Schema<ITravelPlace, TravelPlaceModel>(
     images: { type: [imageSchema], default: [] },
     videos: { type: [videoSchema], default: [] },
     highlights: { type: [String], default: [] },
+    // Lower-cased + trimmed so "Beach" and "beach " count as the same type.
+    tags: { type: [{ type: String, lowercase: true, trim: true }], default: [] },
     featured: { type: Boolean, default: false },
     galleryLayout: {
       type: String,
       enum: TRAVEL_GALLERY_LAYOUTS,
       default: "featured",
     },
+    // { bn: { name, summary, story, highlights }, ar: {...} } - see shared/localize.
+    i18n: { type: Schema.Types.Mixed, default: {} },
   },
   {
     timestamps: true,
@@ -68,6 +72,8 @@ const travelOverviewSchema = new Schema<ITravelOverview, TravelOverviewModel>(
   {
     history: { type: String, default: "" },
     futurePlan: { type: String, default: "" },
+    // { bn: { history, futurePlan }, ar: {...} } - see shared/localize.
+    i18n: { type: Schema.Types.Mixed, default: {} },
   },
   {
     timestamps: true,

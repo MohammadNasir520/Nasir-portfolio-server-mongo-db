@@ -1,4 +1,5 @@
 import { Model, Types } from "mongoose";
+import { ContentLocale } from "../../../shared/localize";
 
 export const TRAVEL_STATUS = ["visited", "planned"] as const;
 export type TravelStatus = (typeof TRAVEL_STATUS)[number];
@@ -37,16 +38,39 @@ export type ITravelPlace = {
   images: ITravelImage[];
   videos: ITravelVideo[];
   highlights: string[];
+  /**
+   * What kind of place this is ("beach", "hills", "heritage"...). Free text,
+   * not an enum, so a new kind needs no code change. Not translated: these are
+   * matching keys for recommendations, not display text.
+   */
+  tags: string[];
   featured: boolean;
   galleryLayout: TravelGalleryLayout;
+  /** Translations of the text fields, keyed by locale (see shared/localize). */
+  i18n?: Partial<
+    Record<
+      ContentLocale,
+      Partial<Pick<ITravelPlace, TravelPlaceI18nField>> & {
+        /** English album name -> translated album name. */
+        albums?: Record<string, string>;
+      }
+    >
+  >;
   createdAt?: Date;
   updatedAt?: Date;
 };
+
+/** The text fields that have per-language versions. */
+export const TRAVEL_PLACE_I18N_FIELDS = ["name", "summary", "story", "highlights"] as const;
+export const TRAVEL_OVERVIEW_I18N_FIELDS = ["history", "futurePlan"] as const;
+type TravelPlaceI18nField = (typeof TRAVEL_PLACE_I18N_FIELDS)[number];
+type TravelOverviewI18nField = (typeof TRAVEL_OVERVIEW_I18N_FIELDS)[number];
 
 export type ITravelOverview = {
   _id?: Types.ObjectId;
   history: string;
   futurePlan: string;
+  i18n?: Partial<Record<ContentLocale, Partial<Pick<ITravelOverview, TravelOverviewI18nField>>>>;
   createdAt?: Date;
   updatedAt?: Date;
 };

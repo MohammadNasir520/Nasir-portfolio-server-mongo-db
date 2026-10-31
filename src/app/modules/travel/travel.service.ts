@@ -13,6 +13,21 @@ import {
   ITravelStats,
 } from "./travel.interface";
 import { TravelOverview, TravelPlace } from "./travel.model";
+import { ContentLocale, localizeDoc } from "../../../shared/localize";
+import { TRAVEL_OVERVIEW_I18N_FIELDS, TRAVEL_PLACE_I18N_FIELDS } from "./travel.interface";
+
+/** localizeDoc, plus each photo's album name from the language's `albums` map. */
+const localizePlace = (doc: unknown, lang: ContentLocale | undefined) => {
+  const plain = ((doc as { toJSON?: () => any })?.toJSON?.() ?? doc) as any;
+  const albums: Record<string, string> | undefined = lang ? plain?.i18n?.[lang]?.albums : undefined;
+  const out = localizeDoc(plain, lang, TRAVEL_PLACE_I18N_FIELDS);
+  if (out && albums && Array.isArray(out.images)) {
+    out.images = out.images.map((image: { album?: string }) =>
+      image.album && albums[image.album] ? { ...image, album: albums[image.album] } : image
+    );
+  }
+  return out;
+};
 
 const insertIntoDB = async (data: ITravelPlace): Promise<ITravelPlace> => {
   return TravelPlace.create(data);
@@ -20,7 +35,8 @@ const insertIntoDB = async (data: ITravelPlace): Promise<ITravelPlace> => {
 
 const getAllFromDB = async (
   filters: ITravelPlaceFilters,
-  paginationOptions: IPaginationOptions
+  paginationOptions: IPaginationOptions,
+  lang?: ContentLocale
 ): Promise<IGenericResponse<ITravelPlace[]>> => {
   const { searchTerm, featured, ...filterData } = filters;
   const { page, limit, skip, sortBy, sortOrder } =
@@ -62,11 +78,14 @@ const getAllFromDB = async (
     .limit(limit);
   const total = await TravelPlace.countDocuments(whereConditions);
 
-  return { meta: { page, limit, total }, data: result };
+  return {
+    meta: { page, limit, total },
+    data: result.map((place) => localizePlace(place, lang)),
+  };
 };
 
-const getByIdFromDB = async (id: string): Promise<ITravelPlace | null> => {
-  return TravelPlace.findById(id);
+const getByIdFromDB = async (id: string, lang?: ContentLocale): Promise<ITravelPlace | null> => {
+  return localizePlace(await TravelPlace.findById(id), lang);
 };
 
 const updateIntoDB = async (
@@ -121,8 +140,8 @@ const getStats = async (): Promise<ITravelStats> => {
   };
 };
 
-const getOverview = async (): Promise<ITravelOverview | null> => {
-  return TravelOverview.findOne();
+const getOverview = async (lang?: ContentLocale): Promise<ITravelOverview | null> => {
+  return localizeDoc(await TravelOverview.findOne(), lang, TRAVEL_OVERVIEW_I18N_FIELDS);
 };
 
 const updateOverview = async (

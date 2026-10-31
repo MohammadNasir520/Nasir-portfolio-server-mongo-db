@@ -19,6 +19,17 @@ const videoSchema = z.object({
   title: z.string().optional(),
 });
 
+/** One language's version of a place. `albums` maps English album names. */
+const placeI18nSchema = z
+  .object({
+    name: z.string(),
+    summary: z.string(),
+    story: z.string(),
+    highlights: z.array(z.string()),
+    albums: z.record(z.string()),
+  })
+  .partial();
+
 const placeBody = {
   name: z.string().min(1),
   country: z.string().min(1),
@@ -30,8 +41,18 @@ const placeBody = {
   images: z.array(imageSchema).optional(),
   videos: z.array(videoSchema).optional(),
   highlights: z.array(z.string()).optional(),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   featured: z.boolean().optional(),
   galleryLayout: z.enum(TRAVEL_GALLERY_LAYOUTS).optional(),
+  // Per-language text: { bn: {...}, ar: {...} }. Every field optional - a
+  // missing one falls back to the English value.
+  i18n: z
+    .object({
+      bn: placeI18nSchema,
+      ar: placeI18nSchema,
+    })
+    .partial()
+    .optional(),
 };
 
 /** A district only makes sense for Bangladesh, and a visit needs a date. */
@@ -74,6 +95,13 @@ const overviewZodSchema = z.object({
   body: z.object({
     history: z.string().optional(),
     futurePlan: z.string().optional(),
+    i18n: z
+      .object({
+        bn: z.object({ history: z.string(), futurePlan: z.string() }).partial(),
+        ar: z.object({ history: z.string(), futurePlan: z.string() }).partial(),
+      })
+      .partial()
+      .optional(),
   }),
 });
 

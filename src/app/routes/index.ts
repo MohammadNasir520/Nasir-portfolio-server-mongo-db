@@ -10,6 +10,7 @@ import { LearningProjectsRoutes } from "../modules/learningProjects/learningProj
 import { ProfileRoutes } from "../modules/profile/profile.routes";
 import { SiteProfileRoutes } from "../modules/siteProfile/siteProfile.routes";
 import { SkillsRoutes } from "../modules/skills/skill.routes";
+import { TranslationRoutes } from "../modules/translation/translation.routes";
 import { TravelRoutes } from "../modules/travel/travel.routes";
 import { TravelMapRoutes } from "../modules/travelMap/travelMap.routes";
 import { UploadsRoutes } from "../modules/uploads/uploads.routes";
@@ -33,6 +34,8 @@ const moduleRoutes = [
   { path: "/travel", route: TravelRoutes },
   // Visitors' own saved maps; separate from /travel, which is the owner's data.
   { path: "/travel-maps", route: TravelMapRoutes },
+  // Static UI strings per language; dynamic content carries its own i18n field.
+  { path: "/translations", route: TranslationRoutes },
   { path: "/learning-projects", route: LearningProjectsRoutes },
   { path: "/blogs", route: BlogRoutes },
   { path: "/about", route: AboutRoutes },
