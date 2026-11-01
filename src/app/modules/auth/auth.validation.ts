@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
 
 /**
  * `role` is deliberately absent, and the body is strict.
@@ -11,10 +12,10 @@ import { z } from "zod";
 const signUpZodSchema = z.object({
   body: z
     .object({
-      name: z.string({ required_error: "name is required" }),
-      email: z.string({ required_error: "email is required" }).email(),
+      name: z.string(required("name is required")),
+      email: z.string(required("email is required")).email(),
       password: z
-        .string({ required_error: "password is required" })
+        .string(required("password is required"))
         .min(8, "password must be at least 8 characters"),
     })
     .strict(),
@@ -22,8 +23,8 @@ const signUpZodSchema = z.object({
 
 const signInZodSchema = z.object({
   body: z.object({
-    email: z.string({ required_error: "email is required" }).email(),
-    password: z.string({ required_error: "password is required" }),
+    email: z.string(required("email is required")).email(),
+    password: z.string(required("password is required")),
   }),
 });
 

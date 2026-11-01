@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
 
 /**
  * contactNo/image1/image2 are gone - those were identity fields and now live
@@ -9,10 +10,10 @@ import { z } from "zod";
 const CreateAdminZodSchema = z.object({
   body: z
     .object({
-      name: z.string({ required_error: "name is required" }),
-      email: z.string({ required_error: "email is required" }).email(),
+      name: z.string(required("name is required")),
+      email: z.string(required("email is required")).email(),
       password: z
-        .string({ required_error: "password is required" })
+        .string(required("password is required"))
         .min(8, "password must be at least 8 characters"),
     })
     .strict(),

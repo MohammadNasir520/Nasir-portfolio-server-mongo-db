@@ -29,9 +29,10 @@ type WithToJSON = { toJSON?: () => Record<string, unknown> };
  */
 export const localizeDoc = <T>(doc: T, lang: ContentLocale | undefined, fields: readonly string[]): T => {
   if (!doc || !lang) return doc;
-  const plain = ((doc as WithToJSON).toJSON?.() ?? doc) as Record<string, any>;
+  type Plain = Record<string, unknown> & { i18n?: Record<string, Record<string, unknown>> };
+  const plain = ((doc as WithToJSON).toJSON?.() ?? doc) as Plain;
   const translated = plain.i18n?.[lang] ?? {};
-  const out: Record<string, any> = { ...plain, lang, original: {} };
+  const out: Record<string, unknown> & { original: Record<string, unknown> } = { ...plain, lang, original: {} };
   for (const field of fields) {
     if (!isFilled(translated[field])) continue;
     out.original[field] = plain[field];

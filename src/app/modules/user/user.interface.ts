@@ -8,6 +8,7 @@ export type IUser = {
   email: string;
   password: string;
   role: ENUM_USER_ROLE | string;
+  passwordChangedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 };

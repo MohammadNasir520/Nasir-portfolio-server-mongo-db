@@ -1,21 +1,18 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
+import { imageRef } from "../../../shared/imageUrl";
 import { BD_DISTRICT_NAMES } from "./bdDistricts";
 import { TRAVEL_GALLERY_LAYOUTS, TRAVEL_STATUS } from "./travel.interface";
 
 const imageSchema = z.object({
   // Local files (/images/...) are as valid as remote ones, so allow both.
-  url: z
-    .string({ required_error: "image url is required" })
-    .min(1)
-    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), {
-      message: "image url must be an absolute URL or a site-root path",
-    }),
+  url: imageRef,
   caption: z.string().optional(),
   album: z.string().optional(),
 });
 
 const videoSchema = z.object({
-  url: z.string({ required_error: "video url is required" }).url(),
+  url: z.string(required("video url is required")).url(),
   title: z.string().optional(),
 });
 
@@ -26,7 +23,7 @@ const placeI18nSchema = z
     summary: z.string(),
     story: z.string(),
     highlights: z.array(z.string()),
-    albums: z.record(z.string()),
+    albums: z.record(z.string(), z.string()),
   })
   .partial();
 

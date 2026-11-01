@@ -1,9 +1,10 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
 
 const CreateZodSchema = z.object({
   body: z.object({
-    title: z.string({ required_error: "title is required" }),
-    description: z.string({ required_error: "description is required" }),
+    title: z.string(required("title is required")),
+    description: z.string(required("description is required")),
   }),
 });
 

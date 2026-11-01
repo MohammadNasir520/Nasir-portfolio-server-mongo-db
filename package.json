@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "tsx src/scripts/seed.ts",
     "migrate": "tsx src/scripts/migrate-site-profile.ts"
@@ -16,6 +16,7 @@
   "author": "Md Nasir Uddin",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.7.5",
     "@types/cookie-parser": "^1.4.7",
@@ -24,8 +25,11 @@
     "@types/hpp": "^0.2.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.0",
+    "eslint": "^9.39.5",
+    "globals": "^17.14.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.72.1"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -41,9 +45,12 @@
     "http-status": "^1.7.4",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.8.9",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": "26.x"
+  },
+  "overrides": {
+    "qs": "^6.16.2"
   }
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
 
 /**
  * PATCH /profile had no validateRequest at all, so any key in the body was
@@ -26,9 +27,9 @@ const updateZodSchema = z.object({
 const changePasswordZodSchema = z.object({
   body: z
     .object({
-      oldPassword: z.string({ required_error: "oldPassword is required" }),
+      oldPassword: z.string(required("oldPassword is required")),
       newPassword: z
-        .string({ required_error: "newPassword is required" })
+        .string(required("newPassword is required"))
         .min(8, "password must be at least 8 characters"),
     })
     .strict(),

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { required } from "../../../shared/zodMessages";
+import { imageRef } from "../../../shared/imageUrl";
 
 /**
  * `url` accepts an absolute URL or a site-root path, matching the travel
@@ -8,21 +10,16 @@ import { z } from "zod";
  * unmodified data.
  */
 const imageSchema = z.object({
-  url: z
-    .string()
-    .min(1)
-    .refine((v) => v.startsWith("/") || /^https?:\/\//.test(v), {
-      message: "image url must be an absolute URL or a site-root path",
-    }),
+  url: imageRef,
 });
 
 const CreateZodSchema = z.object({
   body: z.object({
     level: z.enum(["best", "learning"]).optional(),
-    title: z.string({ required_error: "title is required" }),
-    overview: z.string({ required_error: "overview is required" }),
-    stack: z.string({ required_error: "stack is required" }),
-    newLearnings: z.string({ required_error: "newLearnings is required" }),
+    title: z.string(required("title is required")),
+    overview: z.string(required("overview is required")),
+    stack: z.string(required("stack is required")),
+    newLearnings: z.string(required("newLearnings is required")),
     liveLink: z.string().url(),
     clientLink: z.string().url().optional(),
     serverLink: z.string().url().optional(),

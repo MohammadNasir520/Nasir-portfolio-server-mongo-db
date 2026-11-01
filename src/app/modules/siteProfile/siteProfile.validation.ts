@@ -1,15 +1,12 @@
 import { z } from "zod";
+import { optionalImageRef } from "../../../shared/imageUrl";
 
 /**
  * Images may be an absolute URL (Cloudinary) or a site-root path
  * (`/images/...`, served from the Next.js public folder). Same rule the travel
  * module uses.
  */
-const imageRef = z
-  .string()
-  .refine((v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v), {
-    message: "must be an absolute URL or a site-root path",
-  });
+const imageRef = optionalImageRef;
 
 /** A social/CV link: either blank or a real URL. Blank means "not set". */
 const optionalUrl = z

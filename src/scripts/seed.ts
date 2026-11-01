@@ -1,7 +1,9 @@
 /**
  * Seeds the local portfolio database with demo content.
  *
- *   npm run seed          # wipe the seeded collections and re-insert
+ *   npm run seed -- --merge   # add missing seed data, never deletes (safe on live DB)
+ *   npm run seed              # wipe the seeded collections and re-insert (local DB only)
+ *   npm run seed -- --force   # wipe + reseed even a remote DB
  *
  * Image paths are relative to the Next.js `public/` folder, so they render
  * through next/image with no `next.config.js` domain whitelisting.
@@ -48,192 +50,309 @@ const projects = [
   {
     level: "best",
     title: "Tuition Media",
-    overview:
-      "A tuition marketplace connecting guardians with verified tutors. Guardians post requirements, tutors apply, and admins moderate every booking from a dashboard.",
+    overview: "A tuition marketplace where parents post tuition jobs (class, subject, schedule, salary, preferred tutor gender, home or online) and users browse, book, cart and review tutoring services. Admin and super-admin dashboards manage users, services, bookings and tuition posts.",
     stack: "FullStack",
-    newLearnings:
-      "Role based access control with JWT refresh tokens, and aggregation pipelines for the tutor matching feed.",
-    liveLink: "https://tuition-media.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/tuition-media-client",
-    serverLink: "https://github.com/MohammadNasir520/tuition-media-server",
-    images: [{ url: "/images/tuitionMedia.png" }],
-    technology: ["React.js", "Next.js", "Node.js", "Express.js", "MongoDB", "Redux", "Typescript", "Tailwind"],
-    features: [
-      "Guardian and tutor onboarding with separate dashboards",
-      "Tutor search with subject, salary and location filters",
-      "Admin moderation queue for every booking request",
-      "JWT auth with refresh token rotation",
+    newLearnings: "Relational modelling with Prisma on PostgreSQL, JWT role-guard middleware with Zod validation, email verification with Nodemailer, and RTK Query with a custom axios baseQuery and cache tags in the Next.js App Router.",
+    liveLink: "https://tuitionmedia.vercel.app",
+    clientLink: "https://github.com/MohammadNasir520/Tution-service-frontend",
+    serverLink: "https://github.com/MohammadNasir520/tution-service-backend",
+    images: [
+      {
+        url: "/images/tuitionMedia.png"
+      }
     ],
+    technology: [
+      "Next.js",
+      "Typescript",
+      "Redux",
+      "Ant Design",
+      "Tailwind",
+      "Node.js",
+      "Express.js",
+      "PostgreSQL",
+      "Prisma",
+      "JWT"
+    ],
+    features: [
+      "Email-verified signup: a JWT verification link is sent with Nodemailer and the account is created on confirmation",
+      "Role-based access for super admin, admin, user, parents and tutor, with role-specific dashboards",
+      "Parents post and manage tuition jobs; admins create, edit and review them",
+      "Service catalog with search, price range filter, sorting, pagination and category/status filters",
+      "Service booking with time slots, booking and payment status, a cart, and star-rated reviews",
+      "Admin-managed FAQ and Latest Updates content on public pages"
+    ]
   },
   {
     level: "best",
     title: "Book Center",
-    overview:
-      "An online bookstore with category browsing, a persistent cart and an order pipeline. Built to practise normalised relational modelling with Prisma.",
+    overview: "A book catalog where signed-in users add books with cover images, search and filter by genre and publication year, review books, and keep a personal reading wishlist with status tracking.",
     stack: "FullStack",
-    newLearnings:
-      "Prisma relations and transactions, plus optimistic cart updates in Redux Toolkit Query.",
-    liveLink: "https://book-center-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/book-center-client",
-    serverLink: "https://github.com/MohammadNasir520/book-center-server",
-    images: [{ url: "/images/bookCenter.png" }],
-    technology: ["React.js", "Next.js", "PostgreSQL", "Node.js", "Express.js", "Typescript", "Tailwind"],
-    features: [
-      "Category and author browsing with server side pagination",
-      "Persistent cart backed by Redux Toolkit Query",
-      "Checkout with order history per user",
-      "Admin CRUD for inventory",
+    newLearnings: "RTK Query with tag-based cache invalidation, Mongoose models with ObjectId refs and a bcrypt pre-save hook, JWT access/refresh tokens, Zod request validation, and third-party image upload from a Vite + React Router app.",
+    liveLink: "",
+    clientLink: "https://github.com/MohammadNasir520/BookCenter_React_Redux",
+    serverLink: "https://github.com/MohammadNasir520/BookCenter_React_Redux_Server",
+    images: [
+      {
+        url: "/images/bookCenter.png"
+      }
     ],
+    technology: [
+      "React.js",
+      "Typescript",
+      "Redux",
+      "Tailwind",
+      "Node.js",
+      "Express.js",
+      "MongoDB",
+      "Mongoose",
+      "JWT",
+      "Zod"
+    ],
+    features: [
+      "Signup and login with bcrypt-hashed passwords and JWT access/refresh tokens",
+      "Add and edit books with cover images uploaded to ImgBB, behind a private route",
+      "Search by title, author or genre, with genre and publication-year filters built from existing books",
+      "Book reviews on the book details page",
+      "Reading wishlist with status tracking: not read, reading, finished",
+      "Edit and delete controls shown only to the book's creator"
+    ]
   },
   {
     level: "best",
     title: "Job Preparation Hub",
-    overview:
-      "A study platform with topic-wise question banks, timed mock exams and a score history chart so candidates can track progress over time.",
+    overview: "A course showcase for Bangladeshi job-exam preparation such as BCS. Courses are served by a small Express API; users browse courses by category, download course details as a PDF, and sign in to reach a protected checkout page.",
     stack: "FullStack",
-    newLearnings:
-      "Timed exam state that survives refreshes, and computing per-topic accuracy with MongoDB aggregation.",
-    liveLink: "https://job-preparation-hub.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/job-preparation-client",
-    serverLink: "https://github.com/MohammadNasir520/job-preparation-server",
-    images: [{ url: "/images/jobPreparation.png" }],
-    technology: ["React.js", "Node.js", "Express.js", "MongoDB", "JavaScript", "Tailwind"],
-    features: [
-      "Topic-wise question bank with difficulty tags",
-      "Timed mock exams with auto submit",
-      "Score history and per-topic accuracy breakdown",
-      "Bookmark questions for later revision",
+    newLearnings: "Firebase Auth with multiple social providers through a React Context provider, React Router v6.4 loaders and protected routes, client-side PDF generation, and a minimal Express API deployed on Vercel.",
+    liveLink: "https://job-preparation-20980.web.app",
+    clientLink: "https://github.com/MohammadNasir520/job-preparation-client-side",
+    serverLink: "https://github.com/MohammadNasir520/job-preparation-server-side",
+    images: [
+      {
+        url: "/images/jobPreparation.png"
+      }
     ],
+    technology: [
+      "React.js",
+      "JavaScript",
+      "Firebase",
+      "Bootstrap",
+      "React Bootstrap",
+      "React Router",
+      "Node.js",
+      "Express.js"
+    ],
+    features: [
+      "Firebase Authentication with email/password, Google and GitHub sign-in",
+      "Private route protecting the course checkout page",
+      "Course listing with a category side nav and details pages loaded via React Router loaders",
+      "Download course details as a PDF",
+      "Express REST API serving course and checkout data",
+      "Blog and FAQ pages"
+    ]
   },
   {
     level: "best",
     title: "Online Newspaper",
-    overview:
-      "A publishing platform with an editorial workflow: reporters draft, editors approve, and approved stories appear on the public front page instantly.",
-    stack: "FullStack",
-    newLearnings:
-      "Draft/publish state machines and incremental static regeneration for article pages.",
-    liveLink: "https://online-newspaper-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/online-newspaper-client",
-    serverLink: "https://github.com/MohammadNasir520/online-newspaper-server",
-    images: [{ url: "/images/onlineNewsPaper.png" }],
-    technology: ["Next.js", "React.js", "MongoDB", "Node.js", "Typescript", "Tailwind"],
-    features: [
-      "Reporter drafting with editor approval queue",
-      "Category front pages with featured slots",
-      "ISR so published articles go live without a rebuild",
-      "Reader comments with moderation",
+    overview: "A news portal that loads categories from a public news API, lists each category's articles sorted by views, and shows full article details in a modal.",
+    stack: "Frontend",
+    newLearnings: "Vanilla JavaScript DOM manipulation, chained fetch calls against a third-party API, client-side sorting, and Bootstrap modals and spinners without a framework.",
+    liveLink: "",
+    clientLink: "https://github.com/MohammadNasir520/Online-News-Paper",
+    images: [
+      {
+        url: "/images/onlineNewsPaper.png"
+      }
     ],
+    technology: [
+      "JavaScript",
+      "HTML5",
+      "CSS3",
+      "Bootstrap",
+      "Font Awesome"
+    ],
+    features: [
+      "News categories loaded dynamically from a REST API",
+      "Per-category article list with a count of items found",
+      "Articles sorted by total views, highest first",
+      "Article details modal with author, views, rating and badge",
+      "Loading spinner, empty-category warning and fallbacks for missing data",
+      "Separate blog page"
+    ]
   },
   {
     level: "learning",
     title: "TV Shop",
-    overview:
-      "An electronics storefront built to practise product filtering and comparison. Shoppers filter by brand, price band and rating, then compare up to three products side by side.",
-    stack: "Frontend",
-    newLearnings:
-      "Composing many independent filters into a single query string without re-render storms.",
-    liveLink: "https://tv-shop-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/tv-shop",
-    images: [{ url: "/images/tvshop.png" }],
-    technology: ["React.js", "Redux", "JavaScript", "Tailwind"],
-    features: [
-      "Multi-axis filtering by brand, price and rating",
-      "Side by side comparison of up to three products",
-      "Cart persisted to localStorage",
+    overview: "A second-hand TV marketplace where buyers browse TVs by category and book them, sellers list and advertise TVs, and an admin manages sellers and buyers, with Stripe card payments for bookings.",
+    stack: "FullStack",
+    newLearnings: "Firebase auth with React Context and private routes, role-based dashboard menus, React Router v6 loaders, and a Stripe PaymentIntent flow backed by an Express + MongoDB API.",
+    liveLink: "https://sell-your-tv.web.app",
+    clientLink: "https://github.com/MohammadNasir520/TV-Shop-Client",
+    serverLink: "https://github.com/MohammadNasir520/TV-Shop-Server",
+    images: [
+      {
+        url: "/images/tvshop.png"
+      }
     ],
+    technology: [
+      "React.js",
+      "JavaScript",
+      "Node.js",
+      "Express.js",
+      "MongoDB",
+      "Firebase",
+      "Tailwind",
+      "DaisyUI",
+      "Stripe",
+      "TanStack Query"
+    ],
+    features: [
+      "Firebase email/password and Google sign-in with Buyer or Seller role chosen at signup",
+      "Browse TVs by category and book one through a modal form; buyers track bookings in My Orders",
+      "Sellers add, delete and advertise their TVs; advertised TVs appear on the home page",
+      "Admin dashboard to list and remove sellers and buyers and verify sellers",
+      "Stripe checkout with a server-created PaymentIntent that marks the booking as paid"
+    ]
   },
   {
     level: "learning",
     title: "World Cup Web",
-    overview:
-      "A tournament companion showing fixtures, live-style score cards and a group standings table computed from match results.",
+    overview: "A responsive two-page fan site for the FIFA World Cup 2022 in Qatar, with a hero banner, a grid of football transfer news, and an upcoming-matches page, built from a Figma design.",
     stack: "Frontend",
-    newLearnings:
-      "Deriving standings from raw results rather than storing them, and formatting fixtures across timezones.",
-    liveLink: "https://world-cup-web-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/world-cup-web",
-    images: [{ url: "/images/worldCupWeb.png" }],
-    technology: ["React.js", "JavaScript", "Firebase", "Tailwind"],
-    features: [
-      "Fixture list grouped by matchday",
-      "Standings table derived from match results",
-      "Team detail pages with squad lists",
+    newLearnings: "Hand-written CSS Grid and Flexbox layouts with media-query breakpoints, translated from a Figma design with desktop, tablet and mobile mockups.",
+    liveLink: "https://mohammadnasir520.github.io/world-cup/",
+    clientLink: "https://github.com/MohammadNasir520/world-cup",
+    images: [
+      {
+        url: "/images/worldCupWeb.png"
+      }
     ],
+    technology: [
+      "HTML5",
+      "CSS3",
+      "Font Awesome"
+    ],
+    features: [
+      "Hero banner with a call-to-action button",
+      "News grid of transfer article cards with category tag, time posted and comment count",
+      "Upcoming Match page with fixture cards showing both team flags and kick-off date",
+      "Responsive CSS Grid layout for mobile, tablet and desktop",
+      "Footer with links and social icons"
+    ]
   },
   {
     level: "learning",
     title: "Donate Today",
-    overview:
-      "A donation platform where campaigns show a live funding progress bar and donors get a receipt history under their account.",
-    stack: "FullStack",
-    newLearnings:
-      "Idempotent donation writes so a retried request cannot double-count a contribution.",
-    liveLink: "https://donate-today-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/donate-today-client",
-    serverLink: "https://github.com/MohammadNasir520/donate-today-server",
-    images: [{ url: "/images/donateTody.png" }],
-    technology: ["React.js", "Node.js", "Express.js", "MongoDB", "JavaScript"],
-    features: [
-      "Campaign pages with live funding progress",
-      "Donor receipt history",
-      "Idempotent donation recording",
+    overview: "A landing page for a flood-relief donation campaign in Sylhet and Sunamganj, Bangladesh, with preset donation amounts, the donation plan, team profiles and an email subscribe section, built from a Figma design.",
+    stack: "Frontend",
+    newLearnings: "Flexbox-based section layouts and multi-font typography, translated pixel-by-pixel from a Figma design.",
+    liveLink: "https://mohammadnasir520.github.io/donate-today-final/",
+    clientLink: "https://github.com/MohammadNasir520/donate-today-final",
+    images: [
+      {
+        url: "/images/donateTody.png"
+      }
     ],
+    technology: [
+      "HTML5",
+      "CSS3",
+      "Google Fonts"
+    ],
+    features: [
+      "Hero section about the flood with a Donate Now call-to-action",
+      "Preset donation amount tiles (100tk to 5000tk) plus a custom amount field",
+      "Donation plan cards: food, shelter and education",
+      "Team profile cards with photos, short bios and Facebook links",
+      "Email subscribe section"
+    ]
   },
   {
     level: "learning",
     title: "Educational Portal",
-    overview:
-      "A course portal with enrolment, sequential lesson unlocking and a per-student completion tracker.",
-    stack: "FullStack",
-    newLearnings:
-      "Modelling course/module/lesson hierarchies and gating lesson access on prior completion.",
-    liveLink: "https://educational-portal-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/educational-portal",
-    images: [{ url: "/images/educational.png" }],
-    technology: ["Next.js", "React.js", "MongoDB", "Node.js", "Typescript"],
-    features: [
-      "Course, module and lesson hierarchy",
-      "Sequential lesson unlocking",
-      "Per-student completion tracking",
+    overview: "A Bootstrap 5 landing page for an online course provider, with a hero carousel, popular course cards with prices, a registration modal, student success stories, an FAQ accordion and a course list page.",
+    stack: "Frontend",
+    newLearnings: "Bootstrap 5's responsive grid and utilities, and its JavaScript components (carousel, collapse, modal, accordion) driven entirely by data attributes.",
+    liveLink: "https://mohammadnasir520.github.io/Educational-website/",
+    clientLink: "https://github.com/MohammadNasir520/Educational-website",
+    images: [
+      {
+        url: "/images/educational.png"
+      }
     ],
+    technology: [
+      "HTML5",
+      "CSS3",
+      "Bootstrap",
+      "Font Awesome"
+    ],
+    features: [
+      "Fixed responsive navbar that collapses into a hamburger menu on small screens",
+      "Auto-playing hero carousel with captions and controls",
+      "Grid of course cards with prices plus a separate course list page",
+      "Registration modal opened from the Ready to join banner",
+      "FAQ accordion and successful-student cards in a responsive grid"
+    ]
   },
   {
     level: "learning",
     title: "Daily Routine Tracker",
-    overview:
-      "A habit tracker with a streak calendar and weekly completion chart, built as a focused exercise in date handling.",
+    overview: "A React exercise planner: add activities from a set of exercise cards, see your total exercise time add up in a side panel, pick a break duration that persists across reloads, and mark the day complete.",
     stack: "Frontend",
-    newLearnings:
-      "Timezone-safe streak calculation, and why storing local dates as UTC midnight avoids off-by-one days.",
-    liveLink: "https://daily-routine-demo.vercel.app",
-    clientLink: "https://github.com/MohammadNasir520/daily-routine",
-    images: [{ url: "/images/dayliroutine.png" }],
-    technology: ["React.js", "Firebase", "JavaScript", "Tailwind"],
-    features: [
-      "Streak calendar with timezone-safe rollover",
-      "Weekly completion chart",
-      "Habit CRUD with reminder times",
+    newLearnings: "React fundamentals: lifting state and passing callbacks between components, useState and useEffect, persisting data in localStorage, and integrating a third-party toast library.",
+    liveLink: "",
+    clientLink: "https://github.com/MohammadNasir520/Daily-Work-Routine",
+    images: [
+      {
+        url: "/images/dayliroutine.png"
+      }
     ],
+    technology: [
+      "React.js",
+      "JavaScript",
+      "CSS3",
+      "React Toastify"
+    ],
+    features: [
+      "Exercise activity cards rendered from data, each with an Add to list button",
+      "Running total of exercise time shared between components via state and props",
+      "Break-time selector saved to localStorage and restored on reload",
+      "Activity Completed button with a toast notification",
+      "Responsive layout with a sticky profile side panel"
+    ]
   },
   {
     level: "learning",
     title: "Social Media App",
-    overview:
-      "A small social network with a following feed, likes and threaded comments — built to practise denormalised read models.",
-    stack: "Backend",
-    newLearnings:
-      "Fan-out-on-read vs fan-out-on-write for feeds, and indexing strategy for the follow graph.",
-    liveLink: "https://social-media-demo.vercel.app",
-    serverLink: "https://github.com/MohammadNasir520/social-media-server",
-    images: [{ url: "/images/socialMedia.png" }],
-    technology: ["Node.js", "Express.js", "MongoDB", "Typescript", "GraphQL"],
-    features: [
-      "Following-based timeline",
-      "Threaded comments",
-      "Follow graph with compound indexes",
+    overview: "A social media app where users sign up with email or Google, create text and image posts, react to and comment on posts, and edit their profile. A React + Vite client talks to a TypeScript Express and Mongoose REST API.",
+    stack: "FullStack",
+    newLearnings: "A modular TypeScript Express architecture (route, controller, service and model per module), Mongoose refs with populate, a reusable pagination and sorting helper, and Firebase auth on the client.",
+    liveLink: "",
+    clientLink: "https://github.com/MohammadNasir520/social_media_app_frontend",
+    serverLink: "https://github.com/MohammadNasir520/social_media_app_backend",
+    images: [
+      {
+        url: "/images/socialMedia.png"
+      }
     ],
-  },
+    technology: [
+      "React.js",
+      "Typescript",
+      "Node.js",
+      "Express.js",
+      "MongoDB",
+      "Mongoose",
+      "Firebase",
+      "Tailwind",
+      "Vite"
+    ],
+    features: [
+      "Firebase email/password and Google sign-in, with users saved to MongoDB",
+      "Create posts with text and an image uploaded to ImgBB",
+      "Like and love reactions, one per user per post",
+      "Comments on posts, shown on a post details page",
+      "Top posts by reactions on the home page and a newest-first media feed, via a paginated, sortable API",
+      "Protected profile page to view and edit name, photo, university and address"
+    ]
+  }
 ];
 
 // Placeholder work history - edit these to your real roles.
@@ -668,8 +787,24 @@ const blogs = [
 
 const run = async () => {
   if (!config.database_url) throw new Error("DATABASE_URL is not set");
+  // Never print credentials: show the host only.
+  const host = config.database_url.replace(/^mongodb(\+srv)?:\/\/([^@]*@)?/, "").split(/[/?]/)[0];
+  const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host);
+  // The full seed wipes ten collections. Against a remote (i.e. live) database
+  // that needs an explicit --force; --merge is non-destructive and always allowed.
+  if (!MERGE && !isLocal && !process.argv.includes("--force")) {
+    throw new Error(
+      `refusing to wipe remote database ${host}. Use --merge to add missing seed data, or --force to wipe and reseed.`
+    );
+  }
   await mongoose.connect(config.database_url);
-  console.log(`connected: ${config.database_url}`);
+  console.log(`connected: ${host}${MERGE ? " (merge mode)" : ""}`);
+
+  if (MERGE) {
+    await merge();
+    await mongoose.disconnect();
+    return;
+  }
 
   await Promise.all([
     Skill.deleteMany({}),
@@ -699,7 +834,63 @@ const run = async () => {
   // The single source of truth for identity. This replaced the `banner` and
   // `socialLink` collections, which each stored their own copy of the name,
   // portrait, tagline and social URLs while the frontend hardcoded a third.
-  await SiteProfile.create({
+  await SiteProfile.create(siteProfile);
+
+  await About.create(about);
+  await ExtraActivities.insertMany(extraActivities);
+  await Achievement.insertMany(achievements);
+  await ensureAdmin();
+  await printCounts();
+  await mongoose.disconnect();
+};
+
+/**
+ * `npm run seed -- --merge`: add whatever seed content is missing without
+ * deleting or overwriting anything. List items are matched by their natural
+ * key (title / name / company); singletons are only created when absent.
+ */
+const MERGE = process.argv.includes("--merge");
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const insertMissing = async (label: string, model: any, docs: any[], key: string) => {
+  const existing = new Set(
+    (await model.find({}, { [key]: 1 }).lean()).map((d: Record<string, unknown>) => d[key]),
+  );
+  const missing = docs.filter((d) => !existing.has(d[key]));
+  if (missing.length) await model.insertMany(missing);
+  console.log(`${label}: +${missing.length} (${docs.length - missing.length} already present)`);
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createIfAbsent = async (label: string, model: any, doc: object) => {
+  if (await model.exists({})) return console.log(`${label}: already present (left untouched)`);
+  await model.create(doc);
+  console.log(`${label}: created`);
+};
+
+const merge = async () => {
+  await insertMissing("skills", Skill, skills, "title");
+  await insertMissing("travelPlaces", TravelPlace, travelPlaces, "name");
+  await createIfAbsent("travelOverview", TravelOverview, travelOverview);
+  await insertMissing("experiences", Experience, experiences, "company");
+  await insertMissing("projects", Projects, projects, "title");
+  await insertMissing("blogs", Blog, blogs, "title");
+  await createIfAbsent("siteProfile", SiteProfile, siteProfile);
+  await createIfAbsent("about", About, about);
+  await insertMissing("extraActivities", ExtraActivities, extraActivities, "title");
+  await insertMissing("achievements", Achievement, achievements, "title");
+  await ensureAdmin();
+  await printCounts();
+};
+
+const travelOverview = {
+  history:
+    "I started travelling seriously while at university in Dinajpur, mostly by night bus and mostly on a student budget. So far that has meant the hill tracts, the tea country of Sylhet, and the long coast down to Saint Martin.",
+  futurePlan:
+    "The goal is all 63 districts of Bangladesh. After that, the northern border - Panchagarh and Tetulia in winter - and eventually somewhere outside the country.",
+};
+
+const siteProfile = {
     name: "Md. Nasir Uddin",
     headline: "Full Stack Developer",
     tagline:
@@ -725,17 +916,18 @@ const run = async () => {
       instagram: "",
       youtube: "",
     },
-    metaTitle: "Nasir Uddin",
-    metaDescription: "Nasir Uddins' Portfolio",
-  });
+    metaTitle: "Md. Nasir Uddin",
+    metaDescription:
+      "Md. Nasir Uddin is a full stack MERN developer from Dinajpur, Bangladesh. Explore his projects, articles and travels.",
+};
 
-  await About.create({
+const about = {
     title: "About Me",
     description:
       "I am a full stack developer from Dinajpur, Bangladesh, with a BBA in Finance and a self-taught path into web development. I work mostly across the MERN stack with TypeScript, and I enjoy the part of the job where a vague requirement turns into a schema that actually holds up.",
-  });
+};
 
-  await ExtraActivities.insertMany([
+const extraActivities = [
     {
       title: "University Programming Club",
       image: "/images/hstuGate.jpg",
@@ -754,9 +946,9 @@ const run = async () => {
       description:
         "Exploring Bangladesh by road and camera, from Saint Martin's Island to the northern tea estates.",
     },
-  ]);
+];
 
-  await Achievement.insertMany([
+const achievements = [
     {
       title: "Internship Completion Certificate - Q Startups Pvt. Ltd.",
       image: "/images/certificates/q-startups-internship.png",
@@ -781,8 +973,9 @@ const run = async () => {
       description:
         "Solved 500+ algorithmic problems across competitive programming platforms.",
     },
-  ]);
+];
 
+const ensureAdmin = async () => {
   // Upsert rather than wipe: never delete accounts that may already exist.
   const adminEmail = "admin@nasir.dev";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
@@ -803,7 +996,9 @@ const run = async () => {
   } else {
     console.log(`admin already exists: ${adminEmail} (left untouched)`);
   }
+};
 
+const printCounts = async () => {
   const counts = {
     skills: await Skill.countDocuments(),
     travelPlaces: await TravelPlace.countDocuments(),
@@ -819,8 +1014,6 @@ const run = async () => {
     users: await User.countDocuments(),
   };
   console.table(counts);
-
-  await mongoose.disconnect();
 };
 
 run().catch((error) => {

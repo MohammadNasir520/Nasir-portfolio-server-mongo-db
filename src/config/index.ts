@@ -24,7 +24,8 @@ export default {
   jwt: {
     secret: process.env.JWT_SECRET,
     refresh_secret: process.env.JWT_REFRESH_SECRET,
-    expires_in: process.env.JWT_EXPIRES_IN || "365d",
+    // Short enough that a leaked token from localStorage stops working soon.
+    expires_in: process.env.JWT_EXPIRES_IN || "7d",
     refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || "365d",
   },
   security: {

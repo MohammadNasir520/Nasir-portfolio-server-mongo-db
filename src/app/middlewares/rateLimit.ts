@@ -1,7 +1,6 @@
 import rateLimit from "express-rate-limit";
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import crypto from "crypto";
 import config from "../../config";
 
 const getFirstForwardedIp = (forwardedFor: string | string[] | undefined) => {
@@ -10,20 +9,13 @@ const getFirstForwardedIp = (forwardedFor: string | string[] | undefined) => {
   return value.split(",")[0]?.trim() || undefined;
 };
 
+// Keyed by client IP only. It used to key on a hash of the Authorization
+// header, which is never verified here - so a brute-force script could send a
+// random header per request, land in a fresh bucket every time, and never hit
+// the login limit. Vercel overwrites x-forwarded-for, so its first hop is the
+// real client. NOTE: the store is in-memory, i.e. per serverless instance; for
+// a hard guarantee add a Vercel WAF rate-limit rule on /api/v1/auth/*.
 const buildRateLimitKey = (req: Request) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (token) {
-      const tokenHash = crypto
-        .createHash("sha256")
-        .update(token)
-        .digest("hex")
-        .slice(0, 24);
-      return `auth:${tokenHash}`;
-    }
-  }
-
   const forwardedIp = getFirstForwardedIp(req.headers["x-forwarded-for"]);
   const realIp =
     typeof req.headers["x-real-ip"] === "string"

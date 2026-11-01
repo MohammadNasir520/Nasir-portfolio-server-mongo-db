@@ -1,3 +1,4 @@
+import { escapeRegex } from "../../../shared/escapeRegex";
 import { FilterQuery } from "mongoose";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
@@ -19,7 +20,7 @@ const getAllFromDB = async (
   if (searchTerm) {
     andConditions.push({
       $or: experienceSearchableFields.map((field) => ({
-        [field]: { $regex: searchTerm, $options: "i" },
+        [field]: { $regex: escapeRegex(searchTerm), $options: "i" },
       })),
     });
   }
@@ -49,8 +50,10 @@ const getAllFromDB = async (
   };
 };
 
-const getByIdFromDB = async (id: string): Promise<IExperience | null> => {
-  return Experience.findById(id);
+const getByIdFromDB = async (id: string): Promise<IExperience> => {
+  const result = await Experience.findById(id);
+  if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Experience not found");
+  return result;
 };
 
 const updateIntoDB = async (

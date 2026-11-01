@@ -6,7 +6,7 @@ const upsertZodSchema = z.object({
     .object({
       route: z.string().trim().min(1).max(60),
       lang: z.enum(UI_LOCALES),
-      translations: z.record(z.unknown()),
+      translations: z.record(z.string(), z.unknown()),
     })
     .strict(),
 });

@@ -20,6 +20,8 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
     // one yields an account that cannot reach the dashboard. `admin.service`
     // force-sets ADMIN for accounts created through /admins.
     role: { type: String, enum: USER_ROLES, default: ENUM_USER_ROLE.USER },
+    // Set whenever the password changes; auth() rejects tokens issued before it.
+    passwordChangedAt: { type: Date },
   },
   {
     timestamps: true,
@@ -39,6 +41,7 @@ userSchema.set("collection", "users");
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
+  if (!this.isNew) this.passwordChangedAt = new Date();
   this.password = await bcrypt.hash(
     this.password,
     Number(config.bycrypt_salt_rounds)

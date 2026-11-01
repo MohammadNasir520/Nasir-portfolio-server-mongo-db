@@ -5,8 +5,9 @@ const signatureZodSchema = z.object({
   body: z
     .object({
       folder: z.enum(UPLOAD_FOLDERS, {
-        required_error: "folder is required",
-        invalid_type_error: "unknown upload folder",
+        // zod 4 has one error hook instead of required_error/invalid_type_error.
+        error: (issue) =>
+          issue.input === undefined ? "folder is required" : "unknown upload folder",
       }),
       // Cloudinary public ids: keep them boring so nothing needs escaping.
       publicId: z

@@ -1,3 +1,4 @@
+import { escapeRegex } from "../../../shared/escapeRegex";
 import { FilterQuery } from "mongoose";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
@@ -19,7 +20,7 @@ const getAllFromDB = async (
   if (searchTerm) {
     andConditions.push({
       $or: blogSearchableFields.map((field) => ({
-        [field]: { $regex: searchTerm, $options: "i" },
+        [field]: { $regex: escapeRegex(searchTerm), $options: "i" },
       })),
     });
   }
@@ -36,8 +37,10 @@ const getAllFromDB = async (
   };
 };
 
-const getByIdFromDB = async (id: string): Promise<IBlog | null> => {
-  return Blog.findById(id);
+const getByIdFromDB = async (id: string): Promise<IBlog> => {
+  const result = await Blog.findById(id);
+  if (!result) throw new ApiError(httpStatus.NOT_FOUND, "Blog not found");
+  return result;
 };
 
 const updateIntoDB = async (

@@ -50,16 +50,34 @@ const globalErrorHandler: ErrorRequestHandler = (
     statusCode = error.statusCode;
     message = error.message;
     errorMessages = error.message ? [{ path: "", message: error.message }] : [];
-  } else if (error instanceof Error) {
+  } else if (
+    error?.name === "JsonWebTokenError" ||
+    error?.name === "TokenExpiredError" ||
+    error?.name === "NotBeforeError"
+  ) {
+    // A bad or expired token is the client's problem, not a server error.
+    statusCode = 401;
+    message =
+      error.name === "TokenExpiredError"
+        ? "Session expired. Please log in again"
+        : "Invalid token";
+    errorMessages = [{ path: "", message }];
+  } else if (error instanceof Error && config.env === "development") {
+    // Raw messages from Mongo, drivers or config can expose internals, so
+    // only development sees them; everyone else gets the generic message.
     message = error.message;
     errorMessages = error.message ? [{ path: "", message: error.message }] : [];
+  }
+  if (statusCode >= 500 && config.env !== "development") {
+    message = "Something went wrong !";
+    errorMessages = [{ path: "", message }];
   }
 
   res.status(statusCode).json({
     success: false,
     message,
     errorMessages,
-    stack: config.env !== "production" ? error?.stack : undefined,
+    stack: config.env === "development" ? error?.stack : undefined,
   });
 };
 

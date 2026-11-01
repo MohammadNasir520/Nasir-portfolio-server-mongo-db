@@ -35,14 +35,10 @@ const loginUser = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
 
   const isUserExist = await User.findOne({ email }).select("+password");
 
-  if (!isUserExist) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User does not exist");
-  }
-
-  const isPasswordMatched = await isUserExist.isPasswordMatched(password);
-
-  if (!isPasswordMatched) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid Password");
+  // One answer for both failures, so the login form can't be used to find
+  // out which emails have accounts.
+  if (!isUserExist || !(await isUserExist.isPasswordMatched(password))) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid email or password");
   }
 
   const userId = isUserExist._id?.toString();
@@ -54,13 +50,7 @@ const loginUser = async (payload: ILoginUser): Promise<ILoginUserResponse> => {
     config.jwt.expires_in as SignOptions["expiresIn"]
   );
 
-  const refreshToken = jwtHelpers.createToken(
-    { userId, role },
-    config.jwt.refresh_secret as Secret,
-    config.jwt.refresh_expires_in as SignOptions["expiresIn"]
-  );
-
-  return { accessToken, refreshToken };
+  return { accessToken };
 };
 
 export const AuthService = {

@@ -1,7 +1,7 @@
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, { Application, NextFunction, Request, Response } from "express";
+import express, { Application, Request, Response } from "express";
 import mongoSanitize from "express-mongo-sanitize";
 import helmet from "helmet";
 import hpp from "hpp";

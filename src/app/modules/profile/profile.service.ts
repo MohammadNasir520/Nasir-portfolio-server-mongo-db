@@ -24,7 +24,7 @@ const updateByIdFromDB = async (
   }
 
   // Role changes are an admin action, never a self-service profile edit.
-  const { role, ...safePayload } = data;
+  const { role: _role, ...safePayload } = data;
 
   Object.assign(profile, safePayload);
   await profile.save();

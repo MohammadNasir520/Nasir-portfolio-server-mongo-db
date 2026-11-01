@@ -1,3 +1,4 @@
+import { escapeRegex } from "../../../shared/escapeRegex";
 import { FilterQuery, SortOrder } from "mongoose";
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiError";
@@ -18,11 +19,13 @@ import { TRAVEL_OVERVIEW_I18N_FIELDS, TRAVEL_PLACE_I18N_FIELDS } from "./travel.
 
 /** localizeDoc, plus each photo's album name from the language's `albums` map. */
 const localizePlace = (doc: unknown, lang: ContentLocale | undefined) => {
-  const plain = ((doc as { toJSON?: () => any })?.toJSON?.() ?? doc) as any;
-  const albums: Record<string, string> | undefined = lang ? plain?.i18n?.[lang]?.albums : undefined;
+  // Always called with a loaded document (callers 404 first), so never null.
+  type PlainPlace = ITravelPlace & { i18n?: Record<string, { albums?: Record<string, string> }> };
+  const plain = ((doc as { toJSON?: () => unknown })?.toJSON?.() ?? doc) as PlainPlace;
+  const albums = lang ? plain?.i18n?.[lang]?.albums : undefined;
   const out = localizeDoc(plain, lang, TRAVEL_PLACE_I18N_FIELDS);
   if (out && albums && Array.isArray(out.images)) {
-    out.images = out.images.map((image: { album?: string }) =>
+    out.images = out.images.map((image) =>
       image.album && albums[image.album] ? { ...image, album: albums[image.album] } : image
     );
   }
@@ -47,7 +50,7 @@ const getAllFromDB = async (
   if (searchTerm) {
     andConditions.push({
       $or: travelPlaceSearchableFields.map((field) => ({
-        [field]: { $regex: searchTerm, $options: "i" },
+        [field]: { $regex: escapeRegex(searchTerm), $options: "i" },
       })),
     });
   }
@@ -85,7 +88,9 @@ const getAllFromDB = async (
 };
 
 const getByIdFromDB = async (id: string, lang?: ContentLocale): Promise<ITravelPlace | null> => {
-  return localizePlace(await TravelPlace.findById(id), lang);
+  const place = await TravelPlace.findById(id);
+  if (!place) throw new ApiError(httpStatus.NOT_FOUND, "Travel place not found");
+  return localizePlace(place, lang);
 };
 
 const updateIntoDB = async (

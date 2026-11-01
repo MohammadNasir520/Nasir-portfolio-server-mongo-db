@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import config from "../../../config";
 import catchAsync from "../../../shared/catchAsync";
 import sendResponse from "../../../shared/sendResponse";
 import { ILoginUserResponse } from "./auth.interface";
@@ -17,20 +16,15 @@ const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
+  // No refresh-token cookie: nothing ever read it (there is no refresh
+  // endpoint), and outside production browsers rejected it anyway.
   const result = await AuthService.loginUser(req.body);
-  const { refreshToken, ...others } = result;
-
-  res.cookie("refreshToken", refreshToken, {
-    secure: config.env === "production",
-    httpOnly: true,
-    sameSite: "none",
-  });
 
   sendResponse<ILoginUserResponse>(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User loggedIn successfully !",
-    data: others,
+    data: result,
   });
 });
 
