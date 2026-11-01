@@ -10,6 +10,8 @@ export const EMPLOYMENT_TYPES = [
 export type EmploymentType = (typeof EMPLOYMENT_TYPES)[number];
 
 export type IExperience = {
+  /** Per-locale translations of the text fields, e.g. { bn: { title } }. */
+  i18n?: Record<string, Record<string, unknown>>;
   _id?: Types.ObjectId;
   company: string;
   role: string;

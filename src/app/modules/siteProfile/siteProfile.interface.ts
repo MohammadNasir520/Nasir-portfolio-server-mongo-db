@@ -26,6 +26,8 @@ export type IHeroImage = {
 };
 
 export type ISiteProfile = {
+  /** Per-locale translations of the text fields, e.g. { bn: { title } }. */
+  i18n?: Record<string, Record<string, unknown>>;
   _id?: Types.ObjectId;
   /** Display name, e.g. "Md. Nasir Uddin". */
   name: string;

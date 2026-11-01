@@ -6,6 +6,9 @@ const blogSchema = new Schema<IBlog, BlogModel>(
     title: { type: String, required: true },
     text: { type: String, required: true },
     image: { type: String, required: true },
+    // Translations of the text fields, keyed by locale: { bn: {...}, ar: {...} }.
+    // English stays in the normal fields; the site falls back to it per field.
+    i18n: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,
