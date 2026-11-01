@@ -99,7 +99,7 @@ const collect = catchAsync(async (req: Request, res: Response) => {
  * cross-origin request, so no preflight is needed while the page unloads).
  */
 const duration = catchAsync(async (req: Request, res: Response) => {
-  let payload: { sessionId?: unknown; seconds?: unknown } = {};
+  let payload: { sessionId?: unknown; seconds?: unknown };
   try {
     payload = typeof req.body === "string" ? JSON.parse(req.body) : req.body ?? {};
   } catch {
