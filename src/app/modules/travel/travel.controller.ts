@@ -100,6 +100,48 @@ const updateOverview = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+/** Crawlers, link unfurlers and monitors - real readers don't send these. */
+const BOT_UA = /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|quora|whatsapp|telegram|discord|curl|wget|python|axios|node-fetch|headless|lighthouse|pingdom|uptime/i;
+
+/** One counted view per visitor per place per window. */
+const VIEW_WINDOW_MS = 30 * 60 * 1000;
+const recentViews = new Map<string, number>();
+
+const clientIp = (req: Request) => {
+  const fwd = req.headers["x-forwarded-for"];
+  const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0]?.trim();
+  return first || req.ip || req.socket.remoteAddress || "unknown";
+};
+
+/**
+ * Whether this request should count. Best-effort: the map lives per server
+ * instance (like the rate limiter), which is fine for a view counter - the
+ * client also only reports once per browser session.
+ */
+const shouldCount = (req: Request, id: string) => {
+  if (BOT_UA.test(String(req.headers["user-agent"] ?? ""))) return false;
+  const now = Date.now();
+  const key = `${clientIp(req)}:${id}`;
+  const last = recentViews.get(key);
+  if (last && now - last < VIEW_WINDOW_MS) return false;
+  recentViews.set(key, now);
+  if (recentViews.size > 10_000) {
+    for (const [k, t] of recentViews) if (now - t >= VIEW_WINDOW_MS) recentViews.delete(k);
+  }
+  return true;
+};
+
+const recordView = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await TravelService.recordView(id, shouldCount(req, id));
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "View recorded",
+    data: result,
+  });
+});
+
 export const TravelController = {
   insertIntoDB,
   getAllFromDB,
@@ -108,6 +150,7 @@ export const TravelController = {
   deleteFromDB,
   getDistricts,
   getStats,
+  recordView,
   getOverview,
   updateOverview,
 };

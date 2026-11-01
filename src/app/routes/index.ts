@@ -2,6 +2,7 @@ import express from "express";
 import { AboutRoutes } from "../modules/about/about.routes";
 import { AchievementRoutes } from "../modules/achievement/achievement.routes";
 import { AdminRoutes } from "../modules/admin/admin.routes";
+import { AnalyticsRoutes } from "../modules/analytics/analytics.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
 import { ExperienceRoutes } from "../modules/experience/experience.routes";
@@ -32,6 +33,7 @@ const moduleRoutes = [
   { path: "/skills", route: SkillsRoutes },
   { path: "/experiences", route: ExperienceRoutes },
   { path: "/travel", route: TravelRoutes },
+  { path: "/analytics", route: AnalyticsRoutes },
   // Visitors' own saved maps; separate from /travel, which is the owner's data.
   { path: "/travel-maps", route: TravelMapRoutes },
   // Static UI strings per language; dynamic content carries its own i18n field.

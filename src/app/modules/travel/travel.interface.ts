@@ -46,6 +46,8 @@ export type ITravelPlace = {
   tags: string[];
   featured: boolean;
   galleryLayout: TravelGalleryLayout;
+  /** How many times the place page has been opened (see recordView). */
+  views: number;
   /** Translations of the text fields, keyed by locale (see shared/localize). */
   i18n?: Partial<
     Record<
@@ -90,6 +92,8 @@ export type ITravelStats = {
   placesVisited: number;
   placesPlanned: number;
   photos: number;
+  /** Sum of every place's page views. */
+  totalViews: number;
 };
 
 export type TravelPlaceModel = Model<ITravelPlace, Record<string, unknown>>;

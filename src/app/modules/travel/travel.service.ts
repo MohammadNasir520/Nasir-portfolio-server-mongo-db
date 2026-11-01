@@ -117,6 +117,25 @@ const getDistricts = async () => ({
   goalDistricts: DISTRICT_GOAL,
 });
 
+/**
+ * Count one view of a place page and return the new total.
+ *
+ * Deliberately cheap and best-effort: an atomic $inc that does not touch
+ * updatedAt (the sitemap reads that as "content changed"). Duplicate and bot
+ * filtering happens in the controller before this is called.
+ */
+const recordView = async (id: string, count: boolean): Promise<{ views: number }> => {
+  const place = count
+    ? await TravelPlace.findByIdAndUpdate(
+        id,
+        { $inc: { views: 1 } },
+        { new: true, projection: { views: 1 }, timestamps: false }
+      ).lean()
+    : await TravelPlace.findById(id, { views: 1 }).lean();
+  if (!place) throw new ApiError(httpStatus.NOT_FOUND, "Travel place not found");
+  return { views: place.views ?? 0 };
+};
+
 const getStats = async (): Promise<ITravelStats> => {
   const visited = await TravelPlace.find({ status: "visited" });
 
@@ -135,6 +154,10 @@ const getStats = async (): Promise<ITravelStats> => {
     0
   );
 
+  const [viewSum] = await TravelPlace.aggregate<{ total: number }>([
+    { $group: { _id: null, total: { $sum: { $ifNull: ["$views", 0] } } } },
+  ]);
+
   return {
     countries: countries.size,
     districtsVisited: districts.size,
@@ -142,6 +165,7 @@ const getStats = async (): Promise<ITravelStats> => {
     placesVisited: visited.length,
     placesPlanned: await TravelPlace.countDocuments({ status: "planned" }),
     photos,
+    totalViews: viewSum?.total ?? 0,
   };
 };
 
@@ -168,6 +192,7 @@ export const TravelService = {
   deleteFromDB,
   getDistricts,
   getStats,
+  recordView,
   getOverview,
   updateOverview,
 };

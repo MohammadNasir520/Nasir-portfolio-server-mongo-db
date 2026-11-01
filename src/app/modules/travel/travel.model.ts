@@ -40,6 +40,9 @@ const travelPlaceSchema = new Schema<ITravelPlace, TravelPlaceModel>(
     // Lower-cased + trimmed so "Beach" and "beach " count as the same type.
     tags: { type: [{ type: String, lowercase: true, trim: true }], default: [] },
     featured: { type: Boolean, default: false },
+    // Page views. Only ever changed by $inc in recordView - the zod schemas
+    // don't accept it, so a dashboard edit can't overwrite the count.
+    views: { type: Number, default: 0, min: 0 },
     galleryLayout: {
       type: String,
       enum: TRAVEL_GALLERY_LAYOUTS,

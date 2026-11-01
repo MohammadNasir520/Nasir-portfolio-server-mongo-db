@@ -28,6 +28,9 @@ router.post(
 );
 router.get("/places", TravelController.getAllFromDB);
 router.get("/places/:id", TravelController.getByIdFromDB);
+// Public: a visitor opening a place page. Deduplicated per visitor in the
+// controller; the global API rate limiter still applies.
+router.post("/places/:id/view", TravelController.recordView);
 router.patch(
   "/places/:id",
   auth(ENUM_USER_ROLE.ADMIN),
