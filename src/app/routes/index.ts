@@ -2,6 +2,7 @@ import express from "express";
 import { AboutRoutes } from "../modules/about/about.routes";
 import { AchievementRoutes } from "../modules/achievement/achievement.routes";
 import { AdminRoutes } from "../modules/admin/admin.routes";
+import { AiAssistantRoutes } from "../modules/aiAssistant/aiAssistant.route";
 import { AnalyticsRoutes } from "../modules/analytics/analytics.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
 import { BlogRoutes } from "../modules/blog/blog.routes";
@@ -43,6 +44,7 @@ const moduleRoutes = [
   { path: "/about", route: AboutRoutes },
   { path: "/achievements", route: AchievementRoutes },
   { path: "/extra-activities", route: ExtraActivitiesRoutes },
+  { path: "/ai-assistant", route: AiAssistantRoutes },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

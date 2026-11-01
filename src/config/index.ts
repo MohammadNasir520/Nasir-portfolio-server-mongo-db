@@ -49,4 +49,12 @@ export default {
     // Every upload is scoped under this, so a client cannot write elsewhere.
     baseFolder: process.env.CLOUDINARY_UPLOAD_FOLDER || "portfolio",
   },
+  openai: {
+    // Used by the AI assistant; never sent to the browser.
+    apiKey: process.env.OPENAI_API_KEY,
+  },
+  gemini: {
+    // Used by the AI assistant; never sent to the browser.
+    apiKey: process.env.GEMINI_API_KEY,
+  },
 };

@@ -1,14 +1,20 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
-import {MessagesAnnotation,StateGraph} from "@langchain/langgraph"
-import { ToolMessage } from "langchain";
+import { MessagesAnnotation, StateGraph, START, END } from "@langchain/langgraph"
+import { AIMessage, HumanMessage, ToolMessage } from "langchain";
+import config from "../../../config";
 
-const llm = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  model: "gpt-4o-mini",
+// const llm = new ChatGoogleGenerativeAI({
+//   apiKey: config.gemini.apiKey,
+//   model: "gemini-3.8-flash",
+// });
+const llm = new ChatGoogleGenerativeAI({
+  apiKey: config.gemini.apiKey,
+  model: "gemini-3.5-flash-lite",
 });
+
 
 // tools for the AI assistant
 
@@ -64,80 +70,94 @@ const llmWithTools = llm.bindTools(tools);
 /*
 Number 1 of Nodes 2
 */
-
-async function aboutmeNode(state: any, input: { query: string }) {
-    const { query } = input;
-    const tool = toolsbyName["aboutme"];
-    if (!tool) {
-        throw new Error("Tool not found");
-    }
-    const result = await llmWithTools.invoke([{
-        role: "system",
-        content: `You are a helpful assistant that answers questions about me, my skills, projects, and experiences. You have access to the following tool: ${tool.name}. Use this tool to answer questions related to me.`
-    }]);
+// WAS WRONG:
+// - Signature was (state: any, input: { query: string }). LangGraph always calls a node as
+//   node(state, runtime) — the 2nd argument is LangGraph's Runtime/config, never your input,
+//   so `query` was undefined and addNode() rejected the function.
+// - Only a system message was sent, so the user's question never reached the LLM.
+// - Returned { message } instead of { messages } — MessagesAnnotation only has a `messages` key.
+// - aboutmeNode and skillsNode were two copies of the same LLM call (both tools are already
+//   bound to llmWithTools, so the LLM itself picks the right tool). Merged into one node.
+async function llmCall(state: typeof MessagesAnnotation.State) {
+    const result = await llmWithTools.invoke([
+        {
+            role: "system",
+            content: "You are a helpful assistant for a personal portfolio website. Use the `aboutme` tool for questions about me, my projects and experiences, and the `skills` tool for questions about my skills.",
+        },
+        // the user's question (and earlier tool results) come from the graph state
+        ...state.messages,
+    ]);
     return {
-        message: [result]
+        messages: [result]
     }
 }
 
 /*
 Number 2 of Nodes 2
 */
-
-async function skillsNode(state: any, input: { query: string }) {
-    const { query } = input;
-    const tool = toolsbyName["skills"];
-    if (!tool) {
-        throw new Error("Tool not found");
+// WAS WRONG:
+// - Same (state, input: { query }) signature problem as above.
+// - Used lastMessage.toolCalls — the property on an AIMessage is `tool_calls`, so the check
+//   always threw "No tool calls found".
+// - Never returned `result`, so the tool outputs never got back into the state.
+async function toolNode(state: typeof MessagesAnnotation.State) {
+    const result: ToolMessage[] = [];
+    const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
+    if (!lastMessage?.tool_calls?.length) {
+        throw new Error("No tool calls found in the last message");
     }
-    const result = await llmWithTools.invoke([{
-        role: "system",
-        content: `You are a helpful assistant that answers questions about my skills. You have access to the following tool: ${tool.name}. Use this tool to answer questions related to my skills.`
-    }])
-     return {
-        message: [result]
-    }}
-/*
-Number 3 of Nodes 2
-*/
-async function toolNode(state: any, input: { query: string }) {
-    const { query } = input;
-    //perform the tool call based on the query
- const    result: ToolMessage[]=[],
- lastMessage = state.messages[state.messages.length - 1];
- if (!lastMessage || !lastMessage.toolCalls) {
-    throw new Error("No tool calls found in the last message");
-}
- for (const toolcall of lastMessage.toolCalls) {    
-    const tool = toolsbyName[toolcall.name];
-    if (!tool) {
-        throw new Error("Tool not found");
+    for (const toolcall of lastMessage.tool_calls) {
+        const tool = toolsbyName[toolcall.name];
+        if (!tool) {
+            throw new Error("Tool not found");
+        }
+        // invoke with the args (not the whole toolcall) so the tool returns its string output
+        const observation = await tool.invoke(toolcall.args as { query: string });
+        result.push(
+            new ToolMessage({
+                content: observation,
+                tool_call_id: toolcall.id!,
+            }));
     }
-    const observation = await tool.invoke(toolcall.args as { query: string });
-    result.push(
-        new ToolMessage({
-        content: observation,
-        tool_call_id: toolcall.id,
-    }));
-}
+    return {
+        messages: result
+    }
 }
 
-function shoudContinue(state: any) {
-    const lastMessage = state.messages[state.messages.length - 1];
-    if (!lastMessage) {
-        return false;
+// WAS WRONG:
+// - Returned true/false. addConditionalEdges needs the NAME of the next node (or END).
+// - Same toolCalls -> tool_calls typo.
+function shouldContinue(state: typeof MessagesAnnotation.State) {
+    const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
+    if (lastMessage?.tool_calls?.length) {
+        return "tool";
     }
-    if (lastMessage.toolCalls && lastMessage.toolCalls.length > 0) {
-        return true;
-    }
-    return false;
+    return END;
 }
 
-const agentbuilder = new StateGraph(MessagesAnnotation).addNode("aboutme", aboutmeNode)
-.addNode("skills", skillsNode)
-.addNode("tool", toolNode)
-.addEdge("aboutme", "tool")
-.addEdge("skills", "tool")
-.addEdge("tool", "aboutme")
-.addEdge("tool", "skills")
-.setStartNode("aboutme");
+// WAS WRONG:
+// - .setStartNode() does not exist — the entry point is .addEdge(START, "<node>").
+// - Plain edges tool -> aboutme AND tool -> skills ran both nodes every time and looped forever
+//   (there was no way to reach END). A conditional edge decides between "run tool" and "finish".
+// - The graph was never .compile()d, so it could not be invoked.
+const agent = new StateGraph(MessagesAnnotation)
+    .addNode("llmCall", llmCall)
+    .addNode("tool", toolNode)
+    .addEdge(START, "llmCall")
+    .addConditionalEdges("llmCall", shouldContinue, ["tool", END])
+    .addEdge("tool", "llmCall")
+    .compile();
+
+// The user's question goes INTO the graph as a HumanMessage — this is how a node "gets the query".
+export const askAssistant = async (query: string) => {
+    const result = await agent.invoke({
+        messages: [new HumanMessage(query)],
+    });
+    return {
+        // .text joins content blocks, so the client always gets a plain string
+        answer: result.messages[result.messages.length - 1]?.text ?? "",
+    };
+};
+
+const result =  askAssistant("What are your skills?");
+console.log("Assistant answer:", result);

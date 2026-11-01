@@ -53,3 +53,7 @@ export const authRateLimiter = createLimiter(
   config.security.authRateLimit.max,
   "authentication"
 );
+
+// Each question costs 2+ requests against the Gemini quota (free tier: a few
+// per minute), so a visitor gets far fewer than the general API budget.
+export const aiRateLimiter = createLimiter(60_000, 5, "AI assistant");
