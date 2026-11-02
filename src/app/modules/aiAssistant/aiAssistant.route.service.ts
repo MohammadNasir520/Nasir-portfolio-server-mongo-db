@@ -5,6 +5,8 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { MessagesAnnotation, StateGraph, START, END } from "@langchain/langgraph"
 import { AIMessage, HumanMessage, ToolMessage } from "langchain";
 import config from "../../../config";
+import { About } from "../about/about.model";
+import { TravelOverview, TravelPlace } from "../travel/travel.model";
 
 // const llm = new ChatGoogleGenerativeAI({
 //   apiKey: config.gemini.apiKey,
@@ -19,7 +21,7 @@ const llm = new ChatGoogleGenerativeAI({
 // tools for the AI assistant
 
 /*
-Number 1 of tools 2
+Tool Number 1 
 */
 const aboutmeTool = tool(
 
@@ -28,7 +30,11 @@ const aboutmeTool = tool(
         // Here you can implement the logic to handle the query and return a response.
         // For example, you can use a database or an API to fetch information about yourself.
         // For now, let's return a simple response.
-        return `You asked: ${query}. I am a personal portfolio website that showcases my skills, projects, and experiences. You can ask me questions related to my portfolio, and I will do my best to provide accurate and helpful responses.`;
+        // return `You asked: ${query}. I am a personal portfolio website that showcases my skills, projects, and experiences. You can ask me questions related to my portfolio, and I will do my best to provide accurate and helpful responses.`;
+
+        const aboutMeInfo = About.find().lean().exec();
+        console.log("aboutMeInfo", aboutMeInfo);
+        return `You asked: ${query}. Here is some information about me: ${JSON.stringify(await aboutMeInfo)}`;
     },
     {
         name: "aboutme",
@@ -40,7 +46,7 @@ const aboutmeTool = tool(
 
 )
 /*
-Number 2 of tools 2
+Tool Number 2 
 */
 
 const skillsTool = tool(
@@ -62,7 +68,35 @@ const skillsTool = tool(
 
 )
 
-const tools = [aboutmeTool, skillsTool];
+/*
+Tool Number 3
+*/ 
+const get_travel_info = tool(
+    async (input: { query: string }) => {
+        const { query } = input;
+        // Here you can implement the logic to handle the query and return a response.
+        // For example, you can use a database or an API to fetch information about travel.
+        // For now, let's return a simple response.
+        const travelInfo = TravelOverview.find().lean().exec();
+        const travelMapInfo = TravelOverview.find().lean().exec();  
+        const TravelPlaceInfo = TravelPlace.find().lean().exec();
+    
+        console.log("travelInfo", travelInfo);
+        console.log("travelMapInfo", travelMapInfo);
+        console.log("TravelPlaceInfo", TravelPlaceInfo);
+
+        return `You asked: ${query}. Here is some information about my travel experiences: ${JSON.stringify(await travelInfo)}. Here is some information about my travel map: ${JSON.stringify(await travelMapInfo)}. Here is some information about my travel places: ${JSON.stringify(await TravelPlaceInfo)}`;
+    },
+    {
+        name: "get_travel_info",
+        description: "This tool is used to answer questions about my travel experiences.",
+        schema: z.object({
+            query: z.string().describe("The question you want to ask about my travel experiences."),
+        }),
+    }
+);
+
+const tools = [aboutmeTool, skillsTool, get_travel_info];
 const toolsbyName = Object.fromEntries(tools.map((tool) => [tool.name, tool]))
 const llmWithTools = llm.bindTools(tools);
 
@@ -149,7 +183,8 @@ const agent = new StateGraph(MessagesAnnotation)
     .compile();
 
 // The user's question goes INTO the graph as a HumanMessage — this is how a node "gets the query".
-export const askAssistant = async (query: string) => {
+ const askAssistant = async (query: string) => {
+   
     const result = await agent.invoke({
         messages: [new HumanMessage(query)],
     });
@@ -158,6 +193,4 @@ export const askAssistant = async (query: string) => {
         answer: result.messages[result.messages.length - 1]?.text ?? "",
     };
 };
-
-const result =  askAssistant("What are your skills?");
-console.log("Assistant answer:", result);
+export { askAssistant };
