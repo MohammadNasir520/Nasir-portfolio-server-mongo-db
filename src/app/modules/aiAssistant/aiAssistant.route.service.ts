@@ -8,7 +8,10 @@ import config from "../../../config";
 import { About } from "../about/about.model";
 import { Skill } from "../skills/skill.model";
 import { TravelOverview, TravelPlace } from "../travel/travel.model";
-import { getPlaceImagesFromWikimedia } from "../../../utils/wikimedia";
+import {
+    getPlaceImagesFromWikimedia,
+    getPlaceSummaryFromWikimedia,
+} from "../../../utils/wikimedia";
 
 // const llm = new ChatGoogleGenerativeAI({
 //   apiKey: config.gemini.apiKey,
@@ -119,7 +122,12 @@ const get_place_image = tool(
         const count = input.count ?? 6;
         // Results come back in a stable order, so "more photos" is the same
         // search with the already-shown ones skipped.
-        const images = (await getPlaceImagesFromWikimedia(input.placeName, skip + count, input.country)).slice(skip);
+        const images = await getPlaceImagesFromWikimedia(
+            input.placeName,
+            count,
+            input.country,
+            skip,
+        );
         if (images.length === 0) {
             return skip > 0
                 ? `There are no more Wikimedia images for ${input.placeName} beyond the ${skip} already shown.`
@@ -149,7 +157,28 @@ const get_place_image = tool(
     }
 );
 
-const tools = [aboutmeTool, skillsTool, get_travel_info, get_place_image];
+/**
+ * Provides general factual information about a destination without claiming
+ * that the portfolio owner personally visited it.
+ */
+const get_place_info = tool(
+    async (input: { placeName: string }) => {
+        const place = await getPlaceSummaryFromWikimedia(input.placeName);
+        if (!place) {
+            return `I could not find reliable public information about ${input.placeName}.`;
+        }
+        return `General information about ${place.title}:\n${place.extract}\n\nSource: ${place.url}`;
+    },
+    {
+        name: "get_place_info",
+        description: "Answer general factual questions about destinations, including places not present in the owner's personal travel records. Do not imply the owner visited the place.",
+        schema: z.object({
+            placeName: z.string().describe("The destination to describe."),
+        }),
+    },
+);
+
+const tools = [aboutmeTool, skillsTool, get_travel_info, get_place_image, get_place_info];
 const llmWithTools = llm.bindTools(tools);
 
 const systemMessage = `
@@ -158,9 +187,10 @@ directly to the visitor on your own portfolio site. Always speak in first person
 ("I built...", "My experience is...", "I love traveling to...").
 
 Ground every fact in what the tools return. Use "aboutme", "skills", and
-"get_travel_info" to look up real information before answering, and use
+"get_travel_info" to look up personal travel records, and use
 "get_place_image" when the visitor asks for destination or landmark images
-that is not available in the portfolio database. Do not rely on memory. If the
+that are not available in the portfolio database. Use "get_place_info" for
+general factual information about a destination. Do not rely on memory. If the
 data doesn't cover something, say so honestly and naturally, the way a person
 would ("I don't have that written down here, but..."). Never invent facts
 about yourself.
@@ -239,6 +269,9 @@ async function toolNode(state: typeof MessagesAnnotation.State) {
             case "get_place_image":
                 observation = await get_place_image.invoke(toolcall.args as { placeName: string; count?: number; country?: string; skip?: number });
                 break;
+            case "get_place_info":
+                observation = await get_place_info.invoke(toolcall.args as { placeName: string });
+                break;
             default:
                 throw new Error(`Tool not found: ${toolcall.name}`);
         }
@@ -280,10 +313,22 @@ const agent = new StateGraph(MessagesAnnotation)
 /**
  * Starts the assistant workflow with the visitor's question.
  */
-const askAssistant = async (query: string) => {
-   
+type ConversationMessage = {
+    role: "user" | "assistant";
+    text: string;
+};
+
+const askAssistant = async (query: string, history: ConversationMessage[] = []) => {
+    const conversation = history.map((message) =>
+        message.role === "user"
+            ? new HumanMessage(message.text)
+            : new AIMessage(message.text),
+    );
+
     const result = await agent.invoke({
-        messages: [new HumanMessage(query)],
+        messages: conversation.length > 0
+            ? conversation
+            : [new HumanMessage(query)],
     });
     return {
         // .text joins content blocks, so the client always gets a plain string

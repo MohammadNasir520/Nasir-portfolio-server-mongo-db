@@ -13,6 +13,58 @@ type WikimediaResponse = {
 };
 
 export type PlaceImage = { url: string; caption: string };
+export type PlaceSummary = { title: string; extract: string; url: string };
+
+/**
+ * Fetches a concise factual summary for a place from Wikipedia.
+ */
+export async function getPlaceSummaryFromWikimedia(
+    placeName: string,
+    country = "Bangladesh",
+): Promise<PlaceSummary | null> {
+    const search = placeName.trim();
+    if (!search) return null;
+
+    try {
+        const searchUrl = new URL("https://en.wikipedia.org/w/api.php");
+        searchUrl.search = new URLSearchParams({
+            action: "query",
+            generator: "search",
+            gsrsearch: `${search} ${country}`,
+            gsrnamespace: "0",
+            gsrlimit: "5",
+            prop: "extracts|info",
+            exintro: "1",
+            explaintext: "1",
+            exchars: "900",
+            inprop: "url",
+            format: "json",
+            origin: "*",
+        }).toString();
+
+        const response = await fetch(searchUrl, {
+            headers: { "User-Agent": "NasirPortfolioChat/1.0 (place information lookup)" },
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) return null;
+
+        const data = (await response.json()) as WikimediaResponse;
+        const pages = Object.values(data.query?.pages ?? {});
+        const page = pages.find((candidate) =>
+            candidate.title?.toLowerCase().includes(search.toLowerCase()),
+        ) ?? pages[0];
+        if (!page?.title || !page.extract) return null;
+
+        return {
+            title: page.title,
+            extract: page.extract.trim(),
+            url: `https://en.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, "_"))}`,
+        };
+    } catch (error) {
+        console.error("Failed to fetch place summary from Wikimedia:", error);
+        return null;
+    }
+}
 
 /** The extract's first sentence, or the page title if there's no extract. */
 function captionFor(page: WikimediaPage): string {
@@ -217,6 +269,7 @@ export async function getPlaceImagesFromWikimedia(
     placeName: string,
     limit = 6,
     country?: string,
+    skip = 0,
 ): Promise<PlaceImage[]> {
     // "Feni District" / "Feni zila" would otherwise need every article title to
     // contain the whole phrase; the core place name is what titles share.
@@ -230,6 +283,8 @@ export async function getPlaceImagesFromWikimedia(
 
     const resolvedPlaceName = (await resolveCanonicalPlaceName(trimmedPlaceName)) ?? trimmedPlaceName;
     const normalizedPlaceName = resolvedPlaceName.toLowerCase();
+    const requestedSkip = Math.max(skip, 0);
+    const targetLimit = Math.min(Math.max(limit + requestedSkip, 1), 30);
 
     try {
         // Plain place name first so we hit the actual geographic article
@@ -254,7 +309,7 @@ export async function getPlaceImagesFromWikimedia(
                 generator: "search",
                 gsrsearch: searchTerm,
                 gsrnamespace: "0",
-                gsrlimit: String(Math.min(Math.max(limit, 1), 10)),
+                gsrlimit: String(targetLimit),
                 prop: "pageimages|extracts",
                 pithumbsize: "800",
                 exintro: "1",
@@ -318,17 +373,25 @@ export async function getPlaceImagesFromWikimedia(
                 }
             }
 
-            if (collected.size >= limit) {
+            if (collected.size >= targetLimit) {
                 break;
             }
         }
 
-        const fromWikipedia = [...collected.values()].slice(0, limit);
-        if (fromWikipedia.length >= limit) return fromWikipedia;
+        const fromWikipedia = [...collected.values()].slice(0, targetLimit);
+        if (fromWikipedia.length >= targetLimit) {
+            return fromWikipedia.slice(requestedSkip, requestedSkip + limit);
+        }
 
         const seen = new Set(fromWikipedia.map((image) => fileKey(image.url)));
-        const extra = await getCommonsPhotos(resolvedPlaceName, normalizedPlaceName, limit - fromWikipedia.length, country);
-        return [...fromWikipedia, ...extra.filter((image) => !seen.has(fileKey(image.url)))].slice(0, limit);
+        const extra = await getCommonsPhotos(
+            resolvedPlaceName,
+            normalizedPlaceName,
+            targetLimit - fromWikipedia.length,
+            country,
+        );
+        return [...fromWikipedia, ...extra.filter((image) => !seen.has(fileKey(image.url)))]
+            .slice(requestedSkip, requestedSkip + limit);
     } catch (error) {
         console.error("Failed to fetch image from Wikimedia:", error);
         return [];
