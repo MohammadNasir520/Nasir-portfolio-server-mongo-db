@@ -23,6 +23,12 @@ export type TravelGalleryLayout = (typeof TRAVEL_GALLERY_LAYOUTS)[number];
 /** `album` groups images into tabs; ignored by the other layouts. */
 export type ITravelImage = { url: string; caption?: string; album?: string };
 export type ITravelVideo = { url: string; title?: string };
+/**
+ * One trip to a place: when, an optional note, and that trip's own photos.
+ * A place's `visits` is its full history - the earliest entry is its "first
+ * visited" date, and a place can be visited more than once over time.
+ */
+export type ITravelVisit = { date: Date; note?: string; images?: ITravelImage[] };
 
 export type ITravelPlace = {
   _id?: Types.ObjectId;
@@ -33,6 +39,8 @@ export type ITravelPlace = {
   district?: string;
   status: TravelStatus;
   visitedOn?: Date | null;
+  /** Full visit history (see ITravelVisit); `visitedOn` stays the primary date. */
+  visits?: ITravelVisit[];
   summary: string;
   story?: string;
   images: ITravelImage[];

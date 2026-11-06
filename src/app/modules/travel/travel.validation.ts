@@ -16,6 +16,12 @@ const videoSchema = z.object({
   title: z.string().optional(),
 });
 
+const visitSchema = z.object({
+  date: z.coerce.date(required("visit date is required")),
+  note: z.string().optional(),
+  images: z.array(imageSchema).optional(),
+});
+
 /** One language's version of a place. `albums` maps English album names. */
 const placeI18nSchema = z
   .object({
@@ -33,6 +39,7 @@ const placeBody = {
   district: z.enum(BD_DISTRICT_NAMES).nullish(),
   status: z.enum(TRAVEL_STATUS).optional(),
   visitedOn: z.coerce.date().nullish(),
+  visits: z.array(visitSchema).optional(),
   summary: z.string().min(1),
   story: z.string().optional(),
   images: z.array(imageSchema).optional(),

@@ -24,6 +24,15 @@ const videoSchema = new Schema(
   { _id: false }
 );
 
+const visitSchema = new Schema(
+  {
+    date: { type: Date, required: true },
+    note: { type: String, default: "" },
+    images: { type: [imageSchema], default: [] },
+  },
+  { _id: false }
+);
+
 const travelPlaceSchema = new Schema<ITravelPlace, TravelPlaceModel>(
   {
     name: { type: String, required: true, trim: true },
@@ -32,6 +41,7 @@ const travelPlaceSchema = new Schema<ITravelPlace, TravelPlaceModel>(
     district: { type: String, enum: [...BD_DISTRICT_NAMES, null], default: null },
     status: { type: String, enum: TRAVEL_STATUS, default: "planned" },
     visitedOn: { type: Date, default: null },
+    visits: { type: [visitSchema], default: [] },
     summary: { type: String, required: true },
     story: { type: String, default: "" },
     images: { type: [imageSchema], default: [] },

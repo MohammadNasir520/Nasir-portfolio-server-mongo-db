@@ -17,4 +17,12 @@ router.post(
   AiAssistantController.ask
 );
 
+// Restores a visitor's earlier conversation when they come back. The session id
+// is a random UUID only their browser holds, so it works as the access key.
+router.get(
+  "/sessions/:sessionId",
+  validateRequest(AiAssistantValidation.sessionZodSchema),
+  AiAssistantController.getSession
+);
+
 export const AiAssistantRoutes = router;
