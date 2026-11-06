@@ -112,11 +112,29 @@ Number 1 of Nodes 2
 // - Returned { message } instead of { messages } — MessagesAnnotation only has a `messages` key.
 // - aboutmeNode and skillsNode were two copies of the same LLM call (both tools are already
 //   bound to llmWithTools, so the LLM itself picks the right tool). Merged into one node.
+
+
+const systemMessage = `
+You are a helpful assistant for a personal portfolio website.
+
+Only answer using information relevant to the portfolio owner.
+
+Use the tools as follows:
+- Use the "aboutme" tool for questions about the owner, projects, experiences, or personal stories.
+- Use the "skills" tool for questions about skills and technologies.
+- Use the "get_travel_info" tool for questions about travel experiences and places.
+
+If the user asks for a story, such as "tell me a story", tell a short and engaging
+story about the portfolio owner based only on information returned by the portfolio
+tools. Do not invent personal facts. Clearly frame creative details as a
+fictionalized story when necessary.
+`;
+
 async function llmCall(state: typeof MessagesAnnotation.State) {
     const result = await llmWithTools.invoke([
         {
             role: "system",
-            content: "You are a helpful assistant for a personal portfolio website. Use the `aboutme` tool for questions about me, my projects and experiences, and the `skills` tool for questions about my skills.",
+            content: systemMessage,
         },
         // the user's question (and earlier tool results) come from the graph state
         ...state.messages,
