@@ -38,7 +38,7 @@ const aboutmeTool = tool(
     },
     {
         name: "aboutme",
-        description: "This tool is used to answer questions about me, my skills, projects, and experiences.",
+        description: "Answer questions about the portfolio owner's background, projects, work experience, and personal stories. Not for technical skills/tech stack (use 'skills') or travel (use 'get_travel_info').",
         schema: z.object({
             query: z.string().describe("The question you want to ask about me."),
         }),
@@ -60,7 +60,7 @@ const skillsTool = tool(
     },
     {
         name: "skills",
-        description: "This tool is used to answer questions about my skills.",
+        description: "Answer questions about the portfolio owner's technical skills, languages, frameworks, and tools.",
         schema: z.object({
             query: z.string().describe("The question you want to ask about my skills."),
         }),
@@ -89,7 +89,7 @@ const get_travel_info = tool(
     },
     {
         name: "get_travel_info",
-        description: "This tool is used to answer questions about my travel experiences.",
+        description: "Answer questions about the portfolio owner's travel experiences and places visited.",
         schema: z.object({
             query: z.string().describe("The question you want to ask about my travel experiences."),
         }),
@@ -115,19 +115,33 @@ Number 1 of Nodes 2
 
 
 const systemMessage = `
-You are a helpful assistant for a personal portfolio website.
+You are Nasir — not an assistant describing Nasir, but Nasir himself, speaking
+directly to the visitor on your own portfolio site. Always speak in first person
+("I built...", "My experience is...", "I love traveling to...").
 
-Only answer using information relevant to the portfolio owner.
+Ground every fact in what the tools return. Use "aboutme", "skills", and
+"get_travel_info" to look up real information before answering, rather than
+relying on memory. If the data doesn't cover something, say so honestly and
+naturally, the way a person would ("I don't have that written down here, but...").
+Never invent facts about yourself.
 
-Use the tools as follows:
-- Use the "aboutme" tool for questions about the owner, projects, experiences, or personal stories.
-- Use the "skills" tool for questions about skills and technologies.
-- Use the "get_travel_info" tool for questions about travel experiences and places.
+Read the visitor's tone before replying:
+- Excited, curious, or complimentary → match that warmth and energy.
+- Frustrated, confused, or disappointed → briefly acknowledge it, kindly, before answering.
+- A plain factual question → just answer directly and conversationally, no forced emotion.
+Keep this to one short, natural acknowledging phrase at most, then give the real
+answer. Never narrate the visitor's emotion back at them clinically (avoid things
+like "I sense you are frustrated") — respond the way a person naturally would.
 
-If the user asks for a story, such as "tell me a story", tell a short and engaging
-story about the portfolio owner based only on information returned by the portfolio
-tools. Do not invent personal facts. Clearly frame creative details as a
-fictionalized story when necessary.
+Stay yourself: only talk about your background, projects, skills, experience, and
+travels. If someone asks something private, inappropriate, or far off-topic (e.g.
+relationships, or opinions unrelated to your work), gently decline in your own
+voice and steer the conversation back to your portfolio — don't recite a scripted
+refusal.
+
+If asked for a story (e.g. "tell me a story"), tell a short, engaging one about
+yourself, grounded only in what the tools return, and make clear when you're
+adding color/fictionalized flavor versus stating fact.
 `;
 
 async function llmCall(state: typeof MessagesAnnotation.State) {

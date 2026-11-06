@@ -265,60 +265,17 @@ const containsBlockedPhrase = (query: string): boolean => {
 const GENERIC_SECURITY_RESPONSE =
     "I can only help with respectful questions about this portfolio, its projects, skills, experience, and travel.";
 const GENERIC_SECURITY_RESPONSE_BN =
-    "আমি শুধু এই পোর্টফোলিও, এর প্রজেক্ট, দক্ষতা, অভিজ্ঞতা এবং ভ্রমণ সম্পর্কে সম্মানজনক প্রশ্নের উত্তর দিতে পারি।";
+    "আমি এই পোর্টফোলিও, এর প্রজেক্ট, দক্ষতা, অভিজ্ঞতা এবং ভ্রমণ সম্পর্কে কথা বলতে পছন্দ করি।";
 
-const PORTFOLIO_TOPIC_PHRASES = [
-    "portfolio",
-    "about you",
-    "about me",
-    "yourself",
-    "name",
-    "profile",
-    "bio",
-    "contact",
-    "email",
-    "project",
-    "work",
-    "experience",
-    "education",
-    "skill",
-    "technology",
-    "tech stack",
-    "programming",
-    "developer",
-    "website",
-    "story",
-    "stories",
-    "গল্প",
-    "গল্প বলো",
-    "কাহিনি",
-    "জীবন কাহিনি",
-    "travel",
-    "trip",
-    "place",
-    "tour",
-    "ভ্রমণ",
-    "ঘুরতে",
-    "জায়গা",
-    "জায়গা",
-    "প্রজেক্ট",
-    "প্রকল্প",
-    "দক্ষতা",
-    "অভিজ্ঞতা",
-    "শিক্ষা",
-    "যোগাযোগ",
-    "পরিচয়",
-    "পরিচয়",
-    "ওয়েবসাইট",
-    "ওয়েবসাইট",
-] as const;
-
-const isPortfolioQuestion = (query: string): boolean => {
-    const normalizedQuery = query.toLocaleLowerCase().replace(/\s+/g, " ").trim();
-    return PORTFOLIO_TOPIC_PHRASES.some((phrase) =>
-        normalizedQuery.includes(phrase.toLocaleLowerCase()),
-    );
-};
+// A previous version of this file also required the query to match a
+// hardcoded whitelist of portfolio-related keywords (isPortfolioQuestion)
+// before it was allowed through. Removed: visitors should be able to ask
+// about anything, and a positive keyword whitelist can't cover real,
+// free-form questions anyway (transliterated Bangla, place names, rephrased
+// questions all failed to match and got wrongly rejected). The checks below
+// stay — they're deny-lists for actual abuse (injection, profanity, XSS),
+// not topic gates, so a miss just means "didn't block" rather than "wrongly
+// blocked a real question".
 
 const getSecurityResponse = (query: unknown, lang: unknown): string => {
     const isBanglaQuery = typeof query === "string" && /[\u0980-\u09FF]/u.test(query);
@@ -337,8 +294,7 @@ const promptSecurityCheck = async (req: Request, res: Response, next: NextFuncti
     if (
         dangerousPatterns.some((pattern) => pattern.test(query)) ||
         containsInjectionPattern(query) ||
-        containsBlockedPhrase(query) ||
-        !isPortfolioQuestion(query)
+        containsBlockedPhrase(query)
     ) {
         return res.status(400).json({ error: getSecurityResponse(query, lang) });
     }
