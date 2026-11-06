@@ -3,6 +3,7 @@ import validateRequest from "../../middlewares/validateRequest";
 import { aiRateLimiter } from "../../middlewares/rateLimit";
 import { AiAssistantController } from "./aiAssistant.controller";
 import { AiAssistantValidation } from "./aiAssistant.validation";
+import promptSecurityCheck from "../../middlewares/aiAssistantMiddlWare";
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ const router = express.Router();
 router.post(
   "/",
   aiRateLimiter,
+  promptSecurityCheck,
   validateRequest(AiAssistantValidation.askZodSchema),
   AiAssistantController.ask
 );
