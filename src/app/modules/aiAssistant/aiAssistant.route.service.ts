@@ -7,6 +7,12 @@ import { AIMessage, HumanMessage, ToolMessage } from "langchain";
 import config from "../../../config";
 import { About } from "../about/about.model";
 import { Skill } from "../skills/skill.model";
+import { SiteProfile } from "../siteProfile/siteProfile.model";
+import { Experience } from "../experience/experience.model";
+import { Projects } from "../learningProjects/learningProjects.model";
+import { Achievement } from "../achievement/achievement.model";
+import { ExtraActivities } from "../extraActivities/extraActivities.model";
+import { Blog } from "../blog/blog.model";
 import { TravelOverview, TravelPlace } from "../travel/travel.model";
 import {
     getPlaceImagesFromWikimedia,
@@ -61,7 +67,7 @@ const skillsTool = tool(
         return `You asked: ${query}. Here are my documented skills: ${JSON.stringify(skills)}`;
     },
     {
-        name: "skills",
+        name: "get_skills",
         description: "Answer questions about the portfolio owner's technical skills, languages, frameworks, and tools.",
         schema: z.object({
             query: z.string().describe("The question you want to ask about my skills."),
@@ -178,7 +184,171 @@ const get_place_info = tool(
     },
 );
 
-const tools = [aboutmeTool, skillsTool, get_travel_info, get_place_image, get_place_info];
+const get_profile = tool(
+    async () => {
+        const profile = await SiteProfile.findOne().lean().exec();
+        if (!profile) return "No public site profile is configured.";
+        const { _id, avatar, heroImages, metaTitle, metaDescription, phone, ...publicProfile } = profile;
+        return JSON.stringify(publicProfile);
+    },
+    {
+        name: "get_profile",
+        description: "Return the public site profile: name, headline, bio, location, public email, socials, and resume link. Do not return private credentials or phone numbers.",
+        schema: z.object({}),
+    },
+);
+
+const get_experience = tool(
+    async (input: { current?: boolean; company?: string; technology?: string }) => {
+        const filter: Record<string, unknown> = {};
+        if (input.current !== undefined) filter.current = input.current;
+        if (input.company) filter.company = new RegExp(input.company, "i");
+        if (input.technology) filter.technology = new RegExp(input.technology, "i");
+        const items = await Experience.find(filter).sort({ current: -1, startDate: -1 }).lean().exec();
+        return JSON.stringify(items.map(({ _id, logo, i18n, ...item }) => item));
+    },
+    {
+        name: "get_experience",
+        description: "Return work experience, optionally filtered by current, company, or technology, sorted newest first.",
+        schema: z.object({
+            current: z.boolean().optional(),
+            company: z.string().optional(),
+            technology: z.string().optional(),
+        }),
+    },
+);
+
+const search_projects = tool(
+    async (input: { level?: "best" | "learning"; technology?: string; search?: string; limit?: number }) => {
+        const filter: Record<string, unknown> = {};
+        if (input.level) filter.level = input.level;
+        if (input.technology) filter.technology = new RegExp(input.technology, "i");
+        if (input.search) {
+            const pattern = new RegExp(input.search, "i");
+            filter.$or = [{ title: pattern }, { overview: pattern }, { stack: pattern }];
+        }
+        const projects = await Projects.find(filter).limit(input.limit ?? 8).lean().exec();
+        return JSON.stringify(projects.map(({ _id, images, newLearnings, features, ...project }) => project));
+    },
+    {
+        name: "search_projects",
+        description: "Search portfolio projects by level (best or learning), technology, or text and return a compact list with title, overview, stack, and live link.",
+        schema: z.object({
+            level: z.enum(["best", "learning"]).optional(),
+            technology: z.string().optional(),
+            search: z.string().optional(),
+            limit: z.number().int().min(1).max(8).optional(),
+        }),
+    },
+);
+
+const get_project = tool(
+    async (input: { title: string }) => {
+        const project = await Projects.findOne({ title: new RegExp(input.title, "i") }).lean().exec();
+        if (!project) return `No project matching "${input.title}" was found.`;
+        const { _id, i18n, ...details } = project;
+        return JSON.stringify(details);
+    },
+    {
+        name: "get_project",
+        description: "Return full details for one project, including features, learnings, stack, live link, and client/server repositories.",
+        schema: z.object({ title: z.string() }),
+    },
+);
+
+const get_travel = tool(
+    async (input: { country?: string; district?: string; status?: "visited" | "planned"; tag?: string }) => {
+        const filter: Record<string, unknown> = {};
+        if (input.country) filter.country = new RegExp(input.country, "i");
+        if (input.district) filter.district = new RegExp(input.district, "i");
+        if (input.status) filter.status = input.status;
+        if (input.tag) filter.tags = new RegExp(input.tag, "i");
+        const [places, overview] = await Promise.all([
+            TravelPlace.find(filter).lean().exec(),
+            TravelOverview.findOne().lean().exec(),
+        ]);
+        return JSON.stringify({ places, overview });
+    },
+    {
+        name: "get_travel",
+        description: "Return travel places and history/future plans, filtered by country, district, visited/planned status, or tag.",
+        schema: z.object({
+            country: z.string().optional(),
+            district: z.string().optional(),
+            status: z.enum(["visited", "planned"]).optional(),
+            tag: z.string().optional(),
+        }),
+    },
+);
+
+const get_achievements = tool(
+    async (input: { kind: "achievement" | "activity" | "both" }) => {
+        const [achievements, activities] = await Promise.all([
+            input.kind === "activity" ? Promise.resolve([]) : Achievement.find().lean().exec(),
+            input.kind === "achievement" ? Promise.resolve([]) : ExtraActivities.find().lean().exec(),
+        ]);
+        return JSON.stringify({ achievements, activities });
+    },
+    {
+        name: "get_achievements",
+        description: "Return achievements, awards, and extra activities. Use kind achievement, activity, or both.",
+        schema: z.object({ kind: z.enum(["achievement", "activity", "both"]).default("both") }),
+    },
+);
+
+const get_blogs = tool(
+    async (input: { search?: string; limit?: number }) => {
+        const filter = input.search ? { title: new RegExp(input.search, "i") } : {};
+        const blogs = await Blog.find(filter).sort({ createdAt: -1 }).limit(input.limit ?? 5).lean().exec();
+        return JSON.stringify(blogs.map(({ _id, image, i18n, text, ...blog }) => ({
+            ...blog,
+            excerpt: text.slice(0, 300),
+            link: `/blog/${String(_id)}`,
+        })));
+    },
+    {
+        name: "get_blogs",
+        description: "Return recent or searched blog posts with title, a 300-character excerpt, and a link.",
+        schema: z.object({ search: z.string().optional(), limit: z.number().int().min(1).max(5).optional() }),
+    },
+);
+
+const get_stats = tool(
+    async () => {
+        const [skills, bestProjects, learningProjects, experience, places, countries, blogs] = await Promise.all([
+            Skill.countDocuments(),
+            Projects.countDocuments({ level: "best" }),
+            Projects.countDocuments({ level: "learning" }),
+            Experience.find().lean().exec(),
+            TravelPlace.countDocuments({ status: "visited" }),
+            TravelPlace.distinct("country", { status: "visited" }),
+            Blog.countDocuments(),
+        ]);
+        const years = experience.length
+            ? Math.max(0, (Date.now() - Math.min(...experience.map((item) => new Date(item.startDate).getTime()))) / 31557600000)
+            : 0;
+        return JSON.stringify({
+            skills,
+            projects: { best: bestProjects, learning: learningProjects },
+            yearsOfExperience: Number(years.toFixed(1)),
+            placesVisited: places,
+            countriesVisited: countries.length,
+            blogs,
+        });
+    },
+    { name: "get_stats", description: "Return portfolio totals for skills, projects, experience years, visited places/countries, and blogs.", schema: z.object({}) },
+);
+
+const get_faq = tool(
+    async () => "No aiKnowledge FAQ collection is configured yet. Please use the profile, experience, skills, projects, travel, achievements, or blogs tools.",
+    { name: "get_faq", description: "Answer dashboard-managed FAQ questions when an aiKnowledge collection is configured.", schema: z.object({ search: z.string().optional() }) },
+);
+
+const tools = [
+    get_profile, aboutmeTool, skillsTool, get_experience,
+    search_projects, get_project, get_travel, get_travel_info, get_place_image,
+    get_place_info, get_achievements, get_blogs, get_stats, get_faq,
+];
 const llmWithTools = llm.bindTools(tools);
 
 const systemMessage = `
@@ -186,11 +356,19 @@ You are Nasir — not an assistant describing Nasir, but Nasir himself, speaking
 directly to the visitor on your own portfolio site. Always speak in first person
 ("I built...", "My experience is...", "I love traveling to...").
 
-Ground every fact in what the tools return. Use "aboutme", "skills", and
-"get_travel_info" to look up personal travel records, and use
-"get_place_image" when the visitor asks for destination or landmark images
-that are not available in the portfolio database. Use "get_place_info" for
-general factual information about a destination. Do not rely on memory. If the
+Ground every fact in what the tools return. Use the tools as follows:
+- get_profile: public identity, headline, bio, location, email, socials, and CV.
+- get_skills: technical skills and levels.
+- get_experience: work history and technologies used.
+- search_projects: compact project search; get_project: full project details.
+- get_travel: personal travel records and plans.
+- get_achievements: awards and extra activities.
+- get_blogs: blog posts and excerpts.
+- get_stats: portfolio totals.
+- get_place_info: general facts about destinations, separate from personal travel.
+- get_place_image: destination image galleries.
+- get_faq: dashboard-managed FAQ answers when available.
+Do not rely on memory. If the
 data doesn't cover something, say so honestly and naturally, the way a person
 would ("I don't have that written down here, but..."). Never invent facts
 about yourself.
@@ -263,6 +441,9 @@ async function toolNode(state: typeof MessagesAnnotation.State) {
             case "skills":
                 observation = await skillsTool.invoke(toolcall.args as { query: string });
                 break;
+            case "get_skills":
+                observation = await skillsTool.invoke(toolcall.args as { query: string });
+                break;
             case "get_travel_info":
                 observation = await get_travel_info.invoke(toolcall.args as { query: string });
                 break;
@@ -271,6 +452,33 @@ async function toolNode(state: typeof MessagesAnnotation.State) {
                 break;
             case "get_place_info":
                 observation = await get_place_info.invoke(toolcall.args as { placeName: string });
+                break;
+            case "get_profile":
+                observation = await get_profile.invoke({});
+                break;
+            case "get_experience":
+                observation = await get_experience.invoke(toolcall.args as { current?: boolean; company?: string; technology?: string });
+                break;
+            case "search_projects":
+                observation = await search_projects.invoke(toolcall.args as { level?: "best" | "learning"; technology?: string; search?: string; limit?: number });
+                break;
+            case "get_project":
+                observation = await get_project.invoke(toolcall.args as { title: string });
+                break;
+            case "get_travel":
+                observation = await get_travel.invoke(toolcall.args as { country?: string; district?: string; status?: "visited" | "planned"; tag?: string });
+                break;
+            case "get_achievements":
+                observation = await get_achievements.invoke(toolcall.args as { kind: "achievement" | "activity" | "both" });
+                break;
+            case "get_blogs":
+                observation = await get_blogs.invoke(toolcall.args as { search?: string; limit?: number });
+                break;
+            case "get_stats":
+                observation = await get_stats.invoke({});
+                break;
+            case "get_faq":
+                observation = await get_faq.invoke(toolcall.args as { search?: string });
                 break;
             default:
                 throw new Error(`Tool not found: ${toolcall.name}`);
