@@ -227,7 +227,8 @@ const search_projects = tool(
             const pattern = new RegExp(input.search, "i");
             filter.$or = [{ title: pattern }, { overview: pattern }, { stack: pattern }];
         }
-        const projects = await Projects.find(filter).limit(input.limit ?? 8).lean().exec();
+        const limit = Math.min(Math.max(input.limit ?? 8, 1), 8);
+        const projects = await Projects.find(filter).limit(limit).lean().exec();
         return JSON.stringify(projects.map(({ _id, images, newLearnings, features, ...project }) => project));
     },
     {
@@ -237,7 +238,11 @@ const search_projects = tool(
             level: z.enum(["best", "learning"]).optional(),
             technology: z.string().optional(),
             search: z.string().optional(),
-            limit: z.number().int().min(1).max(8).optional(),
+            // Normalize an over-large model-provided value instead of failing
+            // the entire request; the database query remains capped at 8.
+            limit: z.number().int().min(1).optional().transform((value) =>
+                value === undefined ? undefined : Math.min(value, 8),
+            ),
         }),
     },
 );
