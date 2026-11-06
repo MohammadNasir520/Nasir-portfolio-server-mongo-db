@@ -6,6 +6,7 @@ import { MessagesAnnotation, StateGraph, START, END } from "@langchain/langgraph
 import { AIMessage, HumanMessage, ToolMessage } from "langchain";
 import config from "../../../config";
 import { About } from "../about/about.model";
+import { Skill } from "../skills/skill.model";
 import { TravelOverview, TravelPlace } from "../travel/travel.model";
 
 // const llm = new ChatGoogleGenerativeAI({
@@ -53,10 +54,10 @@ const skillsTool = tool(
 
     async (input: { query: string }) => {
         const { query } = input;
-        // Here you can implement the logic to handle the query and return a response.
-        // For example, you can use a database or an API to fetch information about your skills.
-        // For now, let's return a simple response.
-        return `You asked: ${query}. I have skills in web development, including HTML, CSS, JavaScript, and various frameworks like React and Angular. I also have experience with backend development using Node.js and databases like MongoDB.`;
+        const skills = await Skill.find({}, { title: 1, level: 1, _id: 0 })
+            .lean()
+            .exec();
+        return `You asked: ${query}. Here are my documented skills: ${JSON.stringify(skills)}`;
     },
     {
         name: "skills",
